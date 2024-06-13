@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Activities.SignUpLoginActivity">
+
+    <ImageView
+        android:id="@+id/profile_img"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="56dp"
+        android:src="@drawable/otp_verify"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/entered_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Verify +91 9905037927"
+        android:textSize="18dp"
+        android:textColor="#000"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/profile_img" />
+
+    <TextView
+        android:id="@+id/about_user"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Enter the otp sent to you to verify the mobile number"
+        android:textAlignment="center"
+        android:textSize="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/entered_number" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="10dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/about_user">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_margin="10dp"
+            android:padding="10dp"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
+            <com.mukeshsolanki.OtpView
+                android:id="@+id/otp_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="5dp"
+                android:inputType="phone"
+                android:itemBackground="@drawable/sent_drawable"
+                android:textAllCaps="true"
+                android:textColor="@android:color/background_dark"
+                app:OtpHideLineWhenFilled="true"
+                app:OtpItemCount="6"
+                app:OtpItemSpacing="3dp"
+                android:focusableInTouchMode="true"
+                app:OtpLineColor="@color/GreenishBlue"
+                app:OtpState_filled="true"
+                app:OtpViewType="line"
+                />
+            <Button
+                android:id="@+id/resend_otp_btn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="RESEND OTP"
+                android:backgroundTint="@color/GreenishBlue"
+                android:layout_marginTop="10dp"/>
+
+            <TextView
+                android:id="@+id/resend_timer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#EA7C7C"
+                android:visibility="gone"/>
+
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
