@@ -1,5 +1,6 @@
 package com.saif.mywhatsapp.Fragments;
 
+import android.app.Activity;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -16,6 +17,12 @@ import com.saif.mywhatsapp.R;
  * create an instance of this fragment.
  */
 public class CallsFragment extends Fragment {
+    @Override
+    public void onResume() {
+        super.onResume();
+        Activity activity=getActivity();
+        activity.setTitle("Calls");
+    }
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER

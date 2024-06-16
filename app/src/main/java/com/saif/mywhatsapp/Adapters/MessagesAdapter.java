@@ -1,36 +1,22 @@
 package com.saif.mywhatsapp.Adapters;
 
-import android.app.usage.UsageEvents;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.github.pgreze.reactions.ReactionPopup;
 import com.github.pgreze.reactions.ReactionsConfig;
 import com.github.pgreze.reactions.ReactionsConfigBuilder;
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.core.utilities.Utilities;
-import com.google.firebase.installations.Utils;
-import com.google.firebase.storage.internal.Util;
-import com.saif.mywhatsapp.Activities.ChatsActivity;
 import com.saif.mywhatsapp.Models.Message;
 import com.saif.mywhatsapp.R;
 import com.saif.mywhatsapp.databinding.ItemReceiveBinding;
 import com.saif.mywhatsapp.databinding.ItemSendBinding;
-
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Formatter;
 import java.util.Locale;
 
 public class MessagesAdapter extends RecyclerView.Adapter{

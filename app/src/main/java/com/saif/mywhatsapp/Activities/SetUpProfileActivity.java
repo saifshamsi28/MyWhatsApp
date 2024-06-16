@@ -55,6 +55,7 @@ public class SetUpProfileActivity extends AppCompatActivity {
         Window window=getWindow();
         window.setStatusBarColor(ContextCompat.getColor(this,R.color.GreenishBlue));
         this.setTitle("Profile");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();

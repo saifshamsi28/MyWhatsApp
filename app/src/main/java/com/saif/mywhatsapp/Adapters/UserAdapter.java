@@ -38,7 +38,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         this.users = users;
     }
 
-    Context context;
+     Context context;
     ArrayList<User> users;
     @NonNull
     @Override
@@ -74,8 +74,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
                                     String formattedTime = formatter.format(date);
                                     holder.conversationBinding.recentMessage.setText(lastMessage);
                                     holder.conversationBinding.messageTime.setText(formattedTime);
-                                    Log.e("UserAdapter", "Last message : "+lastMessage);
-                                    Log.e("UserAdapter", "LAST MESSAGE TIME : "+formattedTime);
+//                                    Log.e("UserAdapter", "Last message : "+lastMessage);
+//                                    Log.e("UserAdapter", "LAST MESSAGE TIME : "+formattedTime);
                                 }
                                 else {
                                     holder.conversationBinding.recentMessage.setText("Tap to check");
@@ -101,23 +101,25 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         });
     }
 
-    private void setThemeForHomeScreen(TextView contactName, TextView recentMessage, TextView messageTime) {
+    private  void setThemeForHomeScreen(TextView contactName, TextView recentMessage, TextView messageTime) {
         int nightModeFlags = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         int color;
         int color2;
         switch (nightModeFlags) {
             case Configuration.UI_MODE_NIGHT_YES:
                 color = ContextCompat.getColor(context, R.color.primaryTextColor); // White for dark mode
+                color2 = ContextCompat.getColor(context, R.color.secondaryTextColor); // White for dark mode
                 break;
             case Configuration.UI_MODE_NIGHT_NO:
             case Configuration.UI_MODE_NIGHT_UNDEFINED:
             default:
                 color = ContextCompat.getColor(context, R.color.primaryTextColor); // Black for light mode
+                color2 = ContextCompat.getColor(context, R.color.secondaryTextColor); // Black for light mode
                 break;
         }
         contactName.setTextColor(color);
-        recentMessage.setTextColor(color);
-        messageTime.setTextColor(color);
+        recentMessage.setTextColor(color2);
+        messageTime.setTextColor(color2);
     }
 
     @Override

@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MyWhatsApp"
+rootProject.name = "WAFragment"
 include(":app")

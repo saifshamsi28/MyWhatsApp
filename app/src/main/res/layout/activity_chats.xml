@@ -118,9 +118,9 @@
                 android:lines="1"
                 android:maxLines="6"
                 android:scrollbars="vertical"
-                android:padding="8dp"
+                android:padding="5dp"
                 android:focusableInTouchMode="true"
-                android:textSize="14sp" />
+                android:textSize="18sp" />
 
             <ImageView
                 android:id="@+id/attachment"

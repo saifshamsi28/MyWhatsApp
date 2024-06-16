@@ -3,18 +3,29 @@ package com.saif.mywhatsapp.Models;
 import java.util.ArrayList;
 
 public class UserStatus {
-    private String name,profileImage;
+    private String userId; // New field for user ID
+    private String name;
+    private String profileImage;
     private long lastUpdated;
     private ArrayList<Status> statuses;
 
     public UserStatus() {
     }
 
-    public UserStatus(String name, String profileImage, long lastUpdated, ArrayList<Status> statuses) {
+    public UserStatus(String userId, String name, String profileImage, long lastUpdated, ArrayList<Status> statuses) {
+        this.userId = userId;
         this.name = name;
         this.profileImage = profileImage;
         this.lastUpdated = lastUpdated;
         this.statuses = statuses;
+    }
+
+    public String getUserId() {
+        return userId; // Getter for user ID
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId; // Setter for user ID
     }
 
     public String getName() {

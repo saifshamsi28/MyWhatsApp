@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -24,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     ActivityMainBinding mainBinding;
     FirebaseAuth auth;
+    public static String currentUserName,currentUserProfile,aboutCurrentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.GreenishBlue));
 
         auth = FirebaseAuth.getInstance();
+
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -82,9 +85,9 @@ public class MainActivity extends AppCompatActivity {
         } else if (R.id.profile==item.getItemId()) {
             Intent intent=new Intent(MainActivity.this, SetUpProfileActivity.class);
             intent.putExtra("source","MainActivity");
-//            intent.putExtra("name",currentUserName);
-//            intent.putExtra("about",aboutCurrentUser);
-//            intent.putExtra("profileUri",currentUserProfile);
+            intent.putExtra("name",currentUserName);
+            intent.putExtra("about",aboutCurrentUser);
+            intent.putExtra("profileUri",currentUserProfile);
             startActivity(intent);
         } else {
             Toast.makeText(this, "Invite clicked", Toast.LENGTH_SHORT).show();

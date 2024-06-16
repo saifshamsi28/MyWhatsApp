@@ -14,8 +14,8 @@
     <style name="Theme.ChatsActionbar" parent="Theme.AppCompat.DayNight.NoActionBar" >
 
     </style>
-    <color name="primaryTextColor">#FFFFFF</color> <!-- White for dark mode -->
-    <color name="secondaryTextColor">#CCCCCC</color>
+    <color name="primaryTextColor">#E6FFFFFF</color> <!-- White for dark mode -->
+    <color name="secondaryTextColor">#D9CCCCCC</color>
     <color name="dividerColor">#444444</color>
     <color name="backgroundColor">#000000</color>
     <!-- Add other colors as needed -->

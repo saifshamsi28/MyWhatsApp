@@ -45,11 +45,12 @@
                 android:id="@+id/message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:maxWidth="260dp"
+                android:maxWidth="290dp"
                 android:paddingLeft="12dp"
                 android:paddingTop="8dp"
                 android:paddingRight="12dp"
                 android:text="Message"
+                android:textIsSelectable="true"
                 android:textColor="#000000"
                 android:textSize="16sp" />
 
