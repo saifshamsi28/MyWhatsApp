@@ -93,7 +93,6 @@ public class MessagesAdapter extends RecyclerView.Adapter{
                     // Hide the date if it's the same as the previous message's date(only show the date once per day)
                     viewHolder.sendBinding.messageDate.setVisibility(View.GONE);
                 }
-
             }
         }else {
             ReceiverViewHolder viewHolder=(ReceiverViewHolder) holder;

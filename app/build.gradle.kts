@@ -42,6 +42,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.room.common.jvm)
+    implementation(libs.room.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -59,5 +61,6 @@ dependencies {
     implementation ("com.github.OMARIHAMZA:StoryView:1.0.2-alpha")
     implementation ("com.facebook.shimmer:shimmer:0.5.0")
     implementation("com.google.firebase:firebase-auth")
+    annotationProcessor(libs.room.compiler)
 //    implementation ("com.github.sharish:ShimmerRecyclerView:v1.3")
 }

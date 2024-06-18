@@ -116,6 +116,7 @@ public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     statusTime=statusTime.substring(1);
                 Status lastStatus = userStatus.getStatuses().get(userStatus.getStatuses().size() - 1);
                 binding.othersCircularStatusView.setPortionsCount(userStatus.getStatuses().size());
+                binding.othersStatusContactName.setText(userStatus.getName());
                 Glide.with(context).load(lastStatus.getImageUrl()).into(binding.othersStatusImage);
                 binding.othersCircularStatusView.setVisibility(View.VISIBLE);
                 String finalStatusTime = statusTime;

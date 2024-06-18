@@ -53,8 +53,7 @@
                 android:visibility="gone"
                 app:portion_color="@color/GreenishBlue"
                 app:portion_spacing="4dp"
-                app:portion_width="3dp"
-                app:portions_count="2" />
+                app:portion_width="3dp"/>
 
         </RelativeLayout>
 

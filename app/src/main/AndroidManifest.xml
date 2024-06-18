@@ -28,8 +28,9 @@
         <activity
             android:name=".Activities.OtpActivity"
             android:exported="false"
+
             android:theme="@style/Base.Theme.MyWhatsApp"
-            android:windowSoftInputMode="stateVisible" />
+            android:windowSoftInputMode="stateVisible|adjustResize" />
         <activity
             android:name=".Activities.SignUpLoginActivity"
             android:exported="true"
@@ -44,6 +45,7 @@
         <activity
             android:name=".Activities.MainActivity"
             android:exported="true"
+            android:windowSoftInputMode="adjustNothing"
             android:theme="@style/Base.Theme.MyWhatsApp" />
 
         <meta-data

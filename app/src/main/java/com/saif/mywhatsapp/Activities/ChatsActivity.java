@@ -194,6 +194,7 @@ public class ChatsActivity extends AppCompatActivity {
                                 .addOnSuccessListener(unused1 -> {
                                     // Toast.makeText(ChatsActivity.this, "message sent successfully", Toast.LENGTH_SHORT).show();
                                 }));
+                chatsBinding.chatRecyclerView.scrollToPosition(messagesAdapter.getItemCount()-1);
             }
         });
 

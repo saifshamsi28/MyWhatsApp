@@ -37,6 +37,8 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.saif.mywhatsapp.Activities.MainActivity;
 import com.saif.mywhatsapp.Adapters.StatusAdapter;
+import com.saif.mywhatsapp.AppDatabase;
+import com.saif.mywhatsapp.DatabaseClient;
 import com.saif.mywhatsapp.Models.Status;
 import com.saif.mywhatsapp.Models.User;
 import com.saif.mywhatsapp.Models.UserStatus;
@@ -66,17 +68,25 @@ public class StatusFragment extends Fragment {
     private ArrayList<UserStatus> userStatuses = new ArrayList<>();
     private RecyclerView otherStatusRecyclerView;
     private UserStatus myUserStatus;
-    private boolean isUserOwnStatusUploaded=false;
-    private String currentUserProfileUri =null;
+    private boolean isUserOwnStatusUploaded = false;
+    private User currentUser;
+    AppDatabase appDatabase;
 
     private Handler handler = new Handler();
     private Runnable removeExpiredStatusesTask = new Runnable() {
         @Override
         public void run() {
             removeExpiredStatuses();
-            handler.postDelayed(this, 15000); // Run every hour
+            handler.postDelayed(this, 60 * 60 * 1000); // Run every hour
         }
     };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Activity activity=getActivity();
+        activity.setTitle("Updates");
+    }
 
     private final ActivityResultLauncher<Intent> statusLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -150,7 +160,7 @@ public class StatusFragment extends Fragment {
 
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
-        context=getContext();
+        context = getContext();
         progressDialog = new ProgressDialog(requireContext());
         progressDialog.setMessage("Uploading image...");
         progressDialog.setCancelable(false);
@@ -160,17 +170,22 @@ public class StatusFragment extends Fragment {
         statusAdapter = new StatusAdapter(getContext(), userStatuses);
         otherStatusRecyclerView.setAdapter(statusAdapter);
 
-//        Glide.with(context).load(user.getProfileImage()).into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
+        appDatabase = DatabaseClient.getInstance(getContext()).getAppDatabase();
+
         handler.post(removeExpiredStatusesTask);
         removeExpiredStatuses();
 
         fragmentStatusBinding.userOwnStatusItems.usersOwnStatusLayout.setOnClickListener(v -> {
             if (myUserStatus != null && !myUserStatus.getStatuses().isEmpty()) {
-                if(isUserOwnStatusUploaded)
+                if (isUserOwnStatusUploaded) {
                     showMyStatuses(myUserStatus);
+                }else {
+                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.setType("image/*");
+                    statusLauncher.launch(intent);
+                }
             } else {
-                // User has no statuses, launch the image picker
-                Intent intent = new Intent(Intent.ACTION_PICK);
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/*");
                 statusLauncher.launch(intent);
             }
@@ -182,60 +197,38 @@ public class StatusFragment extends Fragment {
             statusLauncher.launch(intent);
         });
 
-        // Fetch user data
+        // Fetch user data from local database
         fetchCurrentUser();
 
         fetchStatuses();
         sortUserStatuses();
 
-        // Notify adapter after sorting
         statusAdapter.notifyDataSetChanged();
+        setThemeForHomeScreen();
     }
 
     private void sortUserStatuses() {
         Collections.sort(userStatuses, new Comparator<UserStatus>() {
             @Override
             public int compare(UserStatus userStatus1, UserStatus userStatus2) {
-                Toast.makeText(requireContext(), "sorting the values", Toast.LENGTH_SHORT).show();
                 return Long.compare(userStatus2.getLastUpdated(), userStatus1.getLastUpdated());
             }
         });
     }
 
-    private void fetchCurrentUser(){
-        database.getReference().child("Users").child(auth.getUid())
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        user = snapshot.getValue(User.class);
-                        if (user != null && user.getProfileImage() != null) {
-                            currentUserProfileUri =user.getProfileImage();
-                            Glide.with(context)
-                                    .asBitmap()
-                                    .load(currentUserProfileUri)
-                                    .placeholder(R.drawable.avatar)
-                                    .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
-//                                    .into(new CustomTarget<Bitmap>() {
-//                                        @Override
-//                                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-//                                            fragmentStatusBinding.userOwnStatusItems.myStatusImage.setImageBitmap(resource);
-//                                            currentUserProfileUri=resource;
-//                                        }
-//                                        @Override
-//                                        public void onLoadCleared(@Nullable Drawable placeholder) {
-//                                            fragmentStatusBinding.userOwnStatusItems.myStatusImage.setImageResource(R.drawable.avatar);
-//                                        }
-//                                    });
-                        } else {
-                            Toast.makeText(requireContext(), "User profile is null", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        // Handle the error
-                    }
+    private void fetchCurrentUser() {
+        new Thread(() -> {
+            currentUser = appDatabase.userDao().getUserByUid(auth.getUid());
+            if (currentUser != null) {
+                getActivity().runOnUiThread(() -> {
+                    Glide.with(context)
+                            .asBitmap()
+                            .load(currentUser.getProfileImage())
+                            .placeholder(R.drawable.avatar)
+                            .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
                 });
+            }
+        }).start();
     }
 
     private void fetchStatuses() {
@@ -254,20 +247,22 @@ public class StatusFragment extends Fragment {
 
                                 ArrayList<Status> statuses = new ArrayList<>();
                                 for (DataSnapshot status : statusSnapshot.child("statuses").getChildren()) {
-                                    Status singleStatus = status.getValue(Status.class);
-                                    statuses.add(singleStatus);
+                                    Status statusObj = status.getValue(Status.class);
+                                    statuses.add(statusObj);
                                 }
                                 userStatus.setStatuses(statuses);
-                                if(userStatus.getUserId().equals(user.getUid()) && userStatus.getStatuses()!=null){
-                                    myUserStatus=userStatus;
+
+                                if (statusSnapshot.getKey().equals(FirebaseAuth.getInstance().getUid())) {
+                                    myUserStatus = userStatus;
                                     isUserOwnStatusUploaded=true;
-                                    setUserOwnStatus(userStatus);
-                                }else
+                                    setUserOwnStatus();
+                                } else {
                                     userStatuses.add(userStatus);
+                                }
                             }
+                            sortUserStatuses();
+                            statusAdapter.notifyDataSetChanged();
                         }
-                        sortUserStatuses();
-                        statusAdapter.notifyDataSetChanged();
                     }
 
                     @Override
@@ -277,198 +272,145 @@ public class StatusFragment extends Fragment {
                 });
     }
 
-    private void setUserOwnStatus(UserStatus userStatus) {
-        if (userStatus != null && !userStatus.getStatuses().isEmpty()) {
-            Status lastStatus = userStatus.getStatuses().get(userStatus.getStatuses().size() - 1);
+    private void refreshUserLayout() {
+        if (myUserStatus != null && !myUserStatus.getStatuses().isEmpty()) {
+            Glide.with(context)
+                    .load(myUserStatus.getStatuses().get(myUserStatus.getStatuses().size() - 1).getImageUrl())
+                    .placeholder(R.drawable.avatar)
+                    .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
+            fragmentStatusBinding.userOwnStatusItems.add.setVisibility(View.GONE);
+            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.VISIBLE);
+            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setPortionsCount(myUserStatus.getStatuses().size());
+        } else {
+            // Load user's profile image instead
+            if (currentUser != null && currentUser.getProfileImage() != null) {
+                Glide.with(context)
+                        .asBitmap()
+                        .load(currentUser.getProfileImage())
+                        .placeholder(R.drawable.avatar)
+                        .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
+            } else {
+                Glide.with(context)
+                        .load(R.drawable.avatar)
+                        .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
+            }
+            fragmentStatusBinding.userOwnStatusItems.add.setVisibility(View.VISIBLE);
+            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.GONE);
+        }
+    }
+
+    private void setUserOwnStatus() {
+        if (myUserStatus != null && !myUserStatus.getStatuses().isEmpty()) {
+            Status lastStatus=myUserStatus.getStatuses().get(myUserStatus.getStatuses().size() - 1);
             Glide.with(context)
                     .load(lastStatus.getImageUrl())
                     .placeholder(R.drawable.avatar)
                     .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
-            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.VISIBLE);
             fragmentStatusBinding.userOwnStatusItems.add.setVisibility(View.GONE);
-            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setPortionsCount(userStatus.getStatuses().size());
-            showMyStatuses(userStatus);
-
-        }else {
-            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.GONE);
+            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.VISIBLE);
+            String lastStatusTime=formatStatusTime(new Date(lastStatus.getTimeStamps()))[0];
+            String lastStatusDate=formatStatusTime(new Date(lastStatus.getTimeStamps()))[1];
+            String currentDate=formatStatusTime(new Date())[1];
+            Log.e("Check","status time: "+lastStatusTime+" status date: "+lastStatusDate+" current date: "+currentDate);
+            if(currentDate.equals(lastStatusDate)){
+                if(lastStatusTime.startsWith("0")) {
+                    lastStatusTime = lastStatusTime.substring(1);
+                }
+            }else {
+                    lastStatusTime="Yesterday";
+                }
+            fragmentStatusBinding.userOwnStatusItems.statusTime.setText(lastStatusTime);
+            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setPortionsCount(myUserStatus.getStatuses().size());
+            refreshUserLayout();
+            fragmentStatusBinding.userOwnStatusItems.usersOwnStatusLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showMyStatuses(myUserStatus);
+                }
+            });
+        } else {
+            // Load user's profile image instead
+            if (currentUser != null && currentUser.getProfileImage() != null) {
+                Glide.with(context)
+                        .asBitmap()
+                        .load(currentUser.getProfileImage())
+                        .placeholder(R.drawable.avatar)
+                        .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
+            } else {
+                Glide.with(context)
+                        .load(R.drawable.avatar)
+                        .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
+            }
             fragmentStatusBinding.userOwnStatusItems.add.setVisibility(View.VISIBLE);
-            fragmentStatusBinding.userOwnStatusItems.statusTime.setText("Tap to add status update");
-            Glide.with(context).load(currentUserProfileUri)
-                    .placeholder(R.drawable.avatar)
-                    .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
-            isUserOwnStatusUploaded=false;
+            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.GONE);
         }
     }
 
-    private void showMyStatuses(UserStatus userStatus) {
-        if (userStatus.getStatuses() != null && !userStatus.getStatuses().isEmpty()) {
-//                // Get the latest status
-            Status lastStatus = userStatus.getStatuses().get(userStatus.getStatuses().size() - 1);
-//
-//                // Set the visibility and image for the latest status
-//                binding.myImageLayout.setVisibility(View.VISIBLE);
-//                binding.add.setVisibility(View.GONE);
-//                binding.myCircularStatusView.setPortionsCount(userStatus.getStatuses().size());
-//                Glide.with(context).load(lastStatus.getImageUrl()).into(binding.myStatusImage);
-//                binding.myCircularStatusView.setVisibility(View.VISIBLE);
-//
-//                // Set the time for the latest status
-            String []statusTimeAndDate=formatStatusTime(new Date(lastStatus.getTimeStamps()));
-
-//            SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-            String statusTime = statusTimeAndDate[0];
-//            SimpleDateFormat formatDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
-            String statusDate = statusTimeAndDate[1];
-            if (statusTime.startsWith("0")) {
-                statusTime = statusTime.substring(1);
+    private void removeExpiredStatuses() {
+        long currentTime = System.currentTimeMillis();
+        for (UserStatus userStatus : userStatuses) {
+            ArrayList<Status> validStatuses = new ArrayList<>();
+            for (Status status : userStatus.getStatuses()) {
+                if (currentTime - status.getTimeStamps() <= 24 * 60 * 60 * 1000) { // Status valid for 24 hours
+                    validStatuses.add(status);
+                }
             }
-//
-            String []currentTimeAndDate = formatStatusTime(new Date());
-            String currentDate = currentTimeAndDate[1];
-//            Log.e("current date",currentDate);
-            if (currentDate.equals(statusDate)) {
-                fragmentStatusBinding.userOwnStatusItems.statusTime.setText(statusTime);
-            } else {
-                fragmentStatusBinding.userOwnStatusItems.statusTime.setText("Yesterday");
-            }
-            String finalStatusTime = statusTime;
-            fragmentStatusBinding.userOwnStatusItems.usersOwnStatusLayout.setOnClickListener(v -> showStoryView(userStatus, finalStatusTime, statusDate));
-        } else {
-            fragmentStatusBinding.userOwnStatusItems.myImageLayout.setVisibility(View.GONE);
+            userStatus.setStatuses(validStatuses);
         }
-        setThemeForHomeScreen(fragmentStatusBinding.userOwnStatusItems.myStatus,fragmentStatusBinding.userOwnStatusItems.statusTime);
+        statusAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        handler.removeCallbacks(removeExpiredStatusesTask);
     }
 
     private String[] formatStatusTime(Date date) {
-//        Date date = new Date(lastStatus.getTimeStamps());
+// Date date = new Date(lastStatus.getTimeStamps());
         SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-        String statusTime = formatTime.format(date);
+                String statusTime = formatTime.format(date);
         SimpleDateFormat formatDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
         String statusDate = formatDate.format(date);
-
         return new String[]{statusTime,statusDate};
     }
-    private void showStoryView(UserStatus userStatus,String statusTime,String statusDate) {
+    private void showMyStatuses(UserStatus myUserStatus) {
         ArrayList<MyStory> myStories = new ArrayList<>();
-        for (Status story : userStatus.getStatuses()) {
-            myStories.add(new MyStory(story.getImageUrl()));
-        }
         SimpleDateFormat formatDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
         String currentDate = formatDate.format(new Date());
-        String thisStatusTime=null;
-        if(currentDate.equals(statusDate)){
-            thisStatusTime="Today, "+statusTime;
-        }else {
-            thisStatusTime="Yesterday, "+statusTime;
-        }
+        for (Status status : myUserStatus.getStatuses()) {
+            myStories.add(new MyStory(status.getImageUrl()));
 
-        new StoryView.Builder(((MainActivity) getContext()).getSupportFragmentManager())
-                .setStoriesList(myStories)
-                .setStoryDuration(5000)
-                .setTitleText(userStatus.getName())
-                .setSubtitleText(thisStatusTime)
-                .setTitleLogoUrl(userStatus.getProfileImage())
+            String statusTime=formatStatusTime(new Date(status.getTimeStamps()))[0];
+            String statusDate=formatStatusTime(new Date(status.getTimeStamps()))[1];
+            String thisStatusTime=null;
+            if(currentDate.equals(statusDate)){
+                statusTime="Today, "+statusTime;
+            }else {
+                statusTime="Yesterday, "+statusTime;
+            }
+        new StoryView.Builder(((Fragment) StatusFragment.this).getChildFragmentManager())
+                .setStoriesList(myStories) // Required
+                .setStoryDuration(5000) // Default is 2000 Millis (2 Seconds)
+                .setTitleText(currentUser.getName()) // Default is Hidden
+                .setSubtitleText(statusTime) // Default is Hidden
+                .setTitleLogoUrl(status.getImageUrl()) // Default is Hidden
                 .setStoryClickListeners(new StoryClickListeners() {
                     @Override
                     public void onDescriptionClickListener(int position) {
-                        // Handle story description click
+                        //your action
                     }
 
                     @Override
                     public void onTitleIconClickListener(int position) {
-                        // Handle title icon click
+                        //your action
                     }
-                })
-                .build()
+                }) // Optional Listeners
+                .build() // Must be called before calling show method
                 .show();
     }
-
-    private void removeExpiredStatuses() {
-        database.getReference().child("status").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                long currentTime = System.currentTimeMillis();
-                long expiryTime = 60000; // 20 minutes in milliseconds
-
-
-                statusAdapter.notifyDataSetChanged();
-
-                for (DataSnapshot userSnapshot : snapshot.getChildren()) {
-                    boolean hasValidStatuses = false;
-                    for (DataSnapshot statusSnapshot : userSnapshot.child("statuses").getChildren()) {
-                        Status status = statusSnapshot.getValue(Status.class);
-                        if (status != null && (currentTime - status.getTimeStamps() > expiryTime)) {
-                            database.getReference().child("status")
-                                    .child(userSnapshot.getKey())
-                                    .child("statuses")
-                                    .child(statusSnapshot.getKey())
-                                    .removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void unused) {
-                                            for (UserStatus userStatus : userStatuses) {
-                                                ArrayList<Status> validStatuses = new ArrayList<>();
-                                                for (Status status : userStatus.getStatuses()) {
-                                                    if (currentTime <= status.getTimeStamps() + (expiryTime)) {
-                                                        validStatuses.add(status);
-                                                    }
-                                                }
-                                                userStatus.setStatuses(validStatuses);
-                                            }
-                                            // Update UI to reflect expired statuses removal
-                                            if (myUserStatus != null) {
-                                                ArrayList<Status> validStatuses = new ArrayList<>();
-                                                for (Status status : myUserStatus.getStatuses()) {
-                                                    if (currentTime <= status.getTimeStamps() + (expiryTime)) {
-                                                        validStatuses.add(status);
-                                                    }
-                                                }
-                                                myUserStatus.setStatuses(validStatuses);
-                                                setUserOwnStatus(myUserStatus);
-                                            }
-                                            // Remove user statuses that are completely expired
-                                            userStatuses.removeIf(userStatus -> userStatus.getStatuses().isEmpty());
-                                        }
-                                    });
-                        } else {
-                            hasValidStatuses = true;
-                        }
-                    }
-
-                    if (!hasValidStatuses) {
-                        database.getReference().child("status")
-                                .child(userSnapshot.getKey())
-                                .removeValue();
-                    }
-                }
-//
-//                fetchCurrentUser();
-                fetchStatuses(); // Refresh statuses
-                statusAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle the error
-            }
-        });
     }
-
-    private void refreshUserLayout() {
-        isUserOwnStatusUploaded=false;
-        if (myUserStatus != null && !myUserStatus.getStatuses().isEmpty()) {
-            fragmentStatusBinding.userOwnStatusItems.add.setVisibility(View.GONE);
-            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.VISIBLE);
-        } else {
-            fragmentStatusBinding.userOwnStatusItems.add.setVisibility(View.VISIBLE);
-            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.GONE);
-            Glide.with(context)
-                    .asBitmap()
-                    .load(currentUserProfileUri)
-                    .placeholder(R.drawable.avatar)
-                    .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
-        }
-    }
-    private  void setThemeForHomeScreen(TextView statusContactName, TextView statusTime) {
+    private  void setThemeForHomeScreen() {
         int nightModeFlags = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         int color;
         int color2;
@@ -484,23 +426,9 @@ public class StatusFragment extends Fragment {
                 color2 = ContextCompat.getColor(context, R.color.secondaryTextColor); // Black for light mode
                 break;
         }
-        statusContactName.setTextColor(color);
-        statusTime.setTextColor(color2);
         fragmentStatusBinding.userOwnStatusItems.statusHeader.setTextColor(color);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        Activity activity = getActivity();
-        if (activity != null) {
-            activity.setTitle("Updates");
-        }
-    }
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        handler.removeCallbacks(removeExpiredStatusesTask);
+        fragmentStatusBinding.userOwnStatusItems.myStatus.setTextColor(color);
+        fragmentStatusBinding.userOwnStatusItems.statusTime.setTextColor(color2);
+        fragmentStatusBinding.userOwnStatusItems.recent.setTextColor(color2);
     }
 }

@@ -33,13 +33,18 @@ import java.util.Date;
 import java.util.Locale;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
+
+     Context context;
+    ArrayList<User> users;
+    private OnItemClickListener listener;
+
     public UserAdapter(Context context, ArrayList<User> users) {
         this.context = context;
         this.users = users;
     }
-
-     Context context;
-    ArrayList<User> users;
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
     @NonNull
     @Override
     public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -50,7 +55,11 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
         User user=users.get(position);
-        holder.conversationBinding.contactName.setText(user.getName());
+        if(FirebaseAuth.getInstance().getCurrentUser().getUid().equals(user.getUid())) {
+            holder.conversationBinding.contactName.setText(user.getName()+" (You)");
+        }else {
+            holder.conversationBinding.contactName.setText(user.getName());
+        }
         ImageView imageView=Glide.with(context)
                 .load(user.getProfileImage())
                 .placeholder(R.drawable.avatar)
@@ -131,7 +140,18 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
             conversationBinding=RowConversationBinding.bind(itemView);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        listener.onItemClick(users.get(getAdapterPosition()));
+                    }
+                }
+            });
         }
+    }
+    public interface OnItemClickListener {
+        void onItemClick(User user);
     }
 }
 
