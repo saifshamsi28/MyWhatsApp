@@ -30,6 +30,7 @@ import com.saif.mywhatsapp.databinding.RowConversationBinding;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
@@ -108,6 +109,11 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
                 context.startActivity(intent);
             }
         });
+    }
+
+    public void updateUserList(List<User> newUsers) {
+        users = new ArrayList<>(newUsers);
+        notifyDataSetChanged();
     }
 
     private  void setThemeForHomeScreen(TextView contactName, TextView recentMessage, TextView messageTime) {

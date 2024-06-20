@@ -110,6 +110,7 @@ public class ChatsActivity extends AppCompatActivity {
                 intent.putExtra("name",receiverName);
                 intent.putExtra("number",contactNumber);
                 intent.putExtra("imageUri",profile_image_uri.toString());
+                intent.putExtra("uid",receiverUid);
                 startActivity(intent);
             }
         });
@@ -194,20 +195,8 @@ public class ChatsActivity extends AppCompatActivity {
                                 .addOnSuccessListener(unused1 -> {
                                     // Toast.makeText(ChatsActivity.this, "message sent successfully", Toast.LENGTH_SHORT).show();
                                 }));
-                chatsBinding.chatRecyclerView.scrollToPosition(messagesAdapter.getItemCount()-1);
+                chatsBinding.chatRecyclerView.scrollToPosition(messagesAdapter.getItemCount());
             }
         });
-
-        // Adjust layout when keyboard appears
-//        chatsBinding.main.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-//            Rect r = new Rect();
-//            chatsBinding.main.getWindowVisibleDisplayFrame(r);
-//            int screenHeight = chatsBinding.main.getRootView().getHeight();
-//            int keypadHeight = screenHeight - r.bottom;
-//
-//            if (keypadHeight > screenHeight * 0.15) {
-//                chatsBinding.chatRecyclerView.scrollToPosition(messagesAdapter.getItemCount() - 1);
-//            }
-//        });
     }
 }

@@ -36,7 +36,7 @@
         app:layout_constraintTop_toBottomOf="@+id/message_date">
 
         <LinearLayout
-            android:id="@+id/layout_gchat_container_other"
+            android:id="@+id/layout_chat_receive_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -48,9 +48,11 @@
                 android:maxWidth="290dp"
                 android:paddingLeft="12dp"
                 android:paddingTop="8dp"
+                android:paddingBottom="8dp"
                 android:paddingRight="12dp"
                 android:text="Message"
                 android:textIsSelectable="true"
+                android:selectAllOnFocus="true"
                 android:textColor="#000000"
                 android:textSize="16sp" />
 
@@ -59,9 +61,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="8:00"
-                android:layout_gravity="end"
+                android:layout_gravity="end|bottom"
                 android:layout_marginEnd="8dp"
-                android:layout_marginBottom="5dp"
+                android:layout_marginBottom="2dp"
                 android:textAlignment="textEnd"
                 android:textColor="#A69C9C"
                 android:textSize="10sp" />

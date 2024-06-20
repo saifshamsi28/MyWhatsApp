@@ -12,8 +12,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
-import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -22,7 +20,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -35,7 +32,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.saif.mywhatsapp.Activities.MainActivity;
 import com.saif.mywhatsapp.Adapters.StatusAdapter;
 import com.saif.mywhatsapp.AppDatabase;
 import com.saif.mywhatsapp.DatabaseClient;
@@ -44,7 +40,6 @@ import com.saif.mywhatsapp.Models.User;
 import com.saif.mywhatsapp.Models.UserStatus;
 import com.saif.mywhatsapp.R;
 import com.saif.mywhatsapp.databinding.FragmentStatusBinding;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,7 +47,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
-
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import omari.hamza.storyview.StoryView;
 import omari.hamza.storyview.callback.StoryClickListeners;
 import omari.hamza.storyview.model.MyStory;
@@ -70,77 +66,38 @@ public class StatusFragment extends Fragment {
     private UserStatus myUserStatus;
     private boolean isUserOwnStatusUploaded = false;
     private User currentUser;
-    AppDatabase appDatabase;
+    private AppDatabase appDatabase;
 
-    private Handler handler = new Handler();
-    private Runnable removeExpiredStatusesTask = new Runnable() {
+    private final Executor executor= Executors.newSingleThreadExecutor();
+    private final Handler handler = new Handler();
+    private final Runnable removeExpiredStatusesTask = new Runnable() {
         @Override
         public void run() {
             removeExpiredStatuses();
-            handler.postDelayed(this, 60 * 60 * 1000); // Run every hour
+            handler.postDelayed(this, 60 * 1000); // Run every hour
         }
     };
-
     @Override
     public void onResume() {
         super.onResume();
         Activity activity=getActivity();
         activity.setTitle("Updates");
     }
-
     private final ActivityResultLauncher<Intent> statusLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null) {
                     Uri selectedImageUri = result.getData().getData();
                     if (selectedImageUri != null) {
-                        progressDialog.show();
-                        FirebaseStorage storage = FirebaseStorage.getInstance();
+                        // Save to local database first
                         Date date = new Date();
-                        StorageReference reference = storage.getReference().child("status").child(date.getTime() + "");
-                        reference.putFile(selectedImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                                if (task.isSuccessful()) {
-                                    reference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                        @Override
-                                        public void onSuccess(Uri uri) {
-                                            progressDialog.dismiss();
-                                            UserStatus userStatus = new UserStatus();
-                                            if (user != null) {
-                                                userStatus.setUserId(user.getUid());
-                                                userStatus.setName(user.getName());
-                                                userStatus.setProfileImage(user.getProfileImage());
-                                            } else {
-                                                Toast.makeText(requireContext(), "User is null", Toast.LENGTH_SHORT).show();
-                                            }
-                                            userStatus.setLastUpdated(date.getTime());
-
-                                            HashMap<String, Object> obj = new HashMap<>();
-                                            obj.put("name", userStatus.getName());
-                                            obj.put("profileImage", userStatus.getProfileImage());
-                                            obj.put("lastUpdated", userStatus.getLastUpdated());
-
-                                            String imageUri = uri.toString();
-                                            Status status = new Status(imageUri, userStatus.getLastUpdated());
-
-                                            database.getReference().child("status")
-                                                    .child(auth.getUid())
-                                                    .updateChildren(obj);
-
-                                            database.getReference().child("status")
-                                                    .child(auth.getUid())
-                                                    .child("statuses")
-                                                    .push()
-                                                    .setValue(status);
-                                        }
-                                    });
-                                } else {
-                                    progressDialog.dismiss();
-                                    Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        });
+                        String userId = auth.getUid();  // Get the current user's ID
+                        Status localStatus = new Status(userId, selectedImageUri.toString(), date.getTime());
+                        localStatus.setLocal(true); // Custom flag to indicate local status
+                        insertStatusToLocalDatabase(localStatus);
+                        updateUIWithLocalStatus(localStatus);
+                        // Upload to Firebase in background
+                        uploadStatusToFirebase(selectedImageUri, date);
                     }
                 }
             }
@@ -149,7 +106,6 @@ public class StatusFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflate the layout using view binding
         fragmentStatusBinding = FragmentStatusBinding.inflate(inflater, container, false);
         return fragmentStatusBinding.getRoot();
     }
@@ -172,14 +128,11 @@ public class StatusFragment extends Fragment {
 
         appDatabase = DatabaseClient.getInstance(getContext()).getAppDatabase();
 
-        handler.post(removeExpiredStatusesTask);
-        removeExpiredStatuses();
-
         fragmentStatusBinding.userOwnStatusItems.usersOwnStatusLayout.setOnClickListener(v -> {
             if (myUserStatus != null && !myUserStatus.getStatuses().isEmpty()) {
                 if (isUserOwnStatusUploaded) {
                     showMyStatuses(myUserStatus);
-                }else {
+                } else {
                     Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                     intent.setType("image/*");
                     statusLauncher.launch(intent);
@@ -190,21 +143,88 @@ public class StatusFragment extends Fragment {
                 statusLauncher.launch(intent);
             }
         });
-
         fragmentStatusBinding.addNewStatus.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
             statusLauncher.launch(intent);
         });
-
-        // Fetch user data from local database
         fetchCurrentUser();
-
         fetchStatuses();
         sortUserStatuses();
-
         statusAdapter.notifyDataSetChanged();
         setThemeForHomeScreen();
+    }
+
+    private void insertStatusToLocalDatabase(Status status) {
+        new Thread(() -> {
+            appDatabase.statusDao().insertStatus(status);
+        }).start();
+    }
+
+    private void updateUIWithLocalStatus(Status status) {
+        if (myUserStatus == null) {
+            myUserStatus = new UserStatus();
+            myUserStatus.setUserId(auth.getUid());
+            myUserStatus.setName(currentUser.getName());
+            myUserStatus.setProfileImage(currentUser.getProfileImage());
+            myUserStatus.setStatuses(new ArrayList<>());
+        }
+        myUserStatus.getStatuses().add(status);
+        isUserOwnStatusUploaded = true;
+        setUserOwnStatus();
+    }
+
+    private void uploadStatusToFirebase(Uri selectedImageUri, Date date) {
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference reference = storage.getReference().child("status").child(date.getTime() + "");
+        reference.putFile(selectedImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                if (task.isSuccessful()) {
+                    reference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            UserStatus userStatus = new UserStatus();
+                            if (user != null) {
+                                userStatus.setUserId(user.getUid());
+                                userStatus.setName(user.getName());
+                                userStatus.setProfileImage(user.getProfileImage());
+                            }
+                            userStatus.setLastUpdated(date.getTime());
+
+                            HashMap<String, Object> obj = new HashMap<>();
+                            obj.put("name", userStatus.getName());
+                            obj.put("profileImage", userStatus.getProfileImage());
+                            obj.put("lastUpdated", userStatus.getLastUpdated());
+
+                            String imageUri = uri.toString();
+                            Status status = new Status(userStatus.getUserId(),imageUri, userStatus.getLastUpdated());
+
+                            database.getReference().child("status")
+                                    .child(auth.getUid())
+                                    .updateChildren(obj);
+
+                            database.getReference().child("status")
+                                    .child(auth.getUid())
+                                    .child("statuses")
+                                    .push()
+                                    .setValue(status);
+
+                            // Update the local status with the Firebase URL
+                            updateLocalStatusWithFirebaseUrl(status, imageUri);
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void updateLocalStatusWithFirebaseUrl(Status localStatus, String firebaseUrl) {
+        localStatus.setImageUrl(firebaseUrl);
+        localStatus.setLocal(false); // Mark as non-local once uploaded
+        new Thread(() -> {
+            appDatabase.statusDao().updateStatus(localStatus);
+        }).start();
     }
 
     private void sortUserStatuses() {
@@ -261,6 +281,7 @@ public class StatusFragment extends Fragment {
                                 }
                             }
                             sortUserStatuses();
+                            refreshUserLayout();
                             statusAdapter.notifyDataSetChanged();
                         }
                     }
@@ -308,6 +329,7 @@ public class StatusFragment extends Fragment {
                     .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
             fragmentStatusBinding.userOwnStatusItems.add.setVisibility(View.GONE);
             fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.VISIBLE);
+            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setPortionsCount(myUserStatus.getStatuses().size());
             String lastStatusTime=formatStatusTime(new Date(lastStatus.getTimeStamps()))[0];
             String lastStatusDate=formatStatusTime(new Date(lastStatus.getTimeStamps()))[1];
             String currentDate=formatStatusTime(new Date())[1];
@@ -320,7 +342,6 @@ public class StatusFragment extends Fragment {
                     lastStatusTime="Yesterday";
                 }
             fragmentStatusBinding.userOwnStatusItems.statusTime.setText(lastStatusTime);
-            fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setPortionsCount(myUserStatus.getStatuses().size());
             refreshUserLayout();
             fragmentStatusBinding.userOwnStatusItems.usersOwnStatusLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -344,6 +365,7 @@ public class StatusFragment extends Fragment {
             fragmentStatusBinding.userOwnStatusItems.add.setVisibility(View.VISIBLE);
             fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.GONE);
         }
+        refreshUserLayout();
     }
 
     private void removeExpiredStatuses() {
@@ -351,7 +373,7 @@ public class StatusFragment extends Fragment {
         for (UserStatus userStatus : userStatuses) {
             ArrayList<Status> validStatuses = new ArrayList<>();
             for (Status status : userStatus.getStatuses()) {
-                if (currentTime - status.getTimeStamps() <= 24 * 60 * 60 * 1000) { // Status valid for 24 hours
+                if (currentTime - status.getTimeStamps() <= 2* 60 * 1000) { // Status valid for 24 hours
                     validStatuses.add(status);
                 }
             }
@@ -378,23 +400,27 @@ public class StatusFragment extends Fragment {
         ArrayList<MyStory> myStories = new ArrayList<>();
         SimpleDateFormat formatDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
         String currentDate = formatDate.format(new Date());
+        Status lastStatus=myUserStatus.getStatuses().get(myUserStatus.getStatuses().size()-1);
+        String statusTime = "";
+        String statusDate;
         for (Status status : myUserStatus.getStatuses()) {
             myStories.add(new MyStory(status.getImageUrl()));
 
-            String statusTime=formatStatusTime(new Date(status.getTimeStamps()))[0];
-            String statusDate=formatStatusTime(new Date(status.getTimeStamps()))[1];
-            String thisStatusTime=null;
-            if(currentDate.equals(statusDate)){
-                statusTime="Today, "+statusTime;
-            }else {
-                statusTime="Yesterday, "+statusTime;
+            statusTime = formatStatusTime(new Date(status.getTimeStamps()))[0];
+            statusDate = formatStatusTime(new Date(status.getTimeStamps()))[1];
+            String thisStatusTime = null;
+            if (currentDate.equals(statusDate)) {
+                statusTime = "Today, " + statusTime;
+            } else {
+                statusTime = "Yesterday, " + statusTime;
             }
+        }
         new StoryView.Builder(((Fragment) StatusFragment.this).getChildFragmentManager())
                 .setStoriesList(myStories) // Required
                 .setStoryDuration(5000) // Default is 2000 Millis (2 Seconds)
-                .setTitleText(currentUser.getName()) // Default is Hidden
+                .setTitleText("My status") // Default is Hidden
                 .setSubtitleText(statusTime) // Default is Hidden
-                .setTitleLogoUrl(status.getImageUrl()) // Default is Hidden
+                .setTitleLogoUrl(currentUser.getProfileImage()) // Default is Hidden
                 .setStoryClickListeners(new StoryClickListeners() {
                     @Override
                     public void onDescriptionClickListener(int position) {
@@ -408,7 +434,6 @@ public class StatusFragment extends Fragment {
                 }) // Optional Listeners
                 .build() // Must be called before calling show method
                 .show();
-    }
     }
     private  void setThemeForHomeScreen() {
         int nightModeFlags = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;

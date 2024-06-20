@@ -1,7 +1,6 @@
 package com.saif.mywhatsapp.Fragments;
 
 import android.app.Activity;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -17,14 +16,11 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.Target;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.saif.mywhatsapp.Activities.MainActivity;
 import com.saif.mywhatsapp.Adapters.UserAdapter;
 import com.saif.mywhatsapp.AppDatabase;
 import com.saif.mywhatsapp.DatabaseClient;
@@ -36,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
 public class ChatsFragment extends Fragment {
 
     private FragmentChatsBinding fragmentChatsBinding;
@@ -64,6 +61,7 @@ public class ChatsFragment extends Fragment {
         fragmentChatsBinding = FragmentChatsBinding.inflate(inflater, container, false);
         return fragmentChatsBinding.getRoot();
     }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -89,7 +87,6 @@ public class ChatsFragment extends Fragment {
                 User user = appDatabase.userDao().getUserByUid(uid);
                 if (user != null) {
                     mainHandler.post(() -> {
-                        // Update UI with user data
                         users.clear();
                         users.add(user);
                         userAdapter.notifyDataSetChanged();
@@ -122,10 +119,10 @@ public class ChatsFragment extends Fragment {
                 Toast.makeText(getContext(), "Error fetching user from Firebase", Toast.LENGTH_SHORT).show();
             }
         });
+
         // Load other users from Room or Firebase
         loadUsers();
     }
-
 
     private void initializeDatabase() {
         // Initialize the AppDatabase using DatabaseClient
@@ -138,35 +135,14 @@ public class ChatsFragment extends Fragment {
         }
     }
 
-//    private void loadUsers() {
-//        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-//        executor.execute(() -> {
-//            List<User> userList = appDatabase.userDao().getAllUsers(); // Fetch all users from local database
-//            mainHandler.post(() -> {
-//                // Filter out duplicates of the current user
-////                ArrayList<User> filteredUsers = new ArrayList<>();
-////                for (User user : userList) {
-////                    if (!user.getUid().equals(currentUserId)) { // Exclude the current user
-////                        filteredUsers.add(user);
-////                    }
-////                }
-//                if(userList.size()!=users.size()) {
-//                    users.clear(); // Clear the existing list
-//                    users.addAll(userList); // Add filtered users
-//                    userAdapter.notifyDataSetChanged();
-//                }// Notify adapter of data change
-//            });
-//        });
-//    }
-
     private void loadUsers() {
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         executor.execute(() -> {
             List<User> userList = appDatabase.userDao().getAllUsers(); // Fetch all users from local database
             mainHandler.post(() -> {
                 if (userList.size() != users.size()) {
-                    users.clear(); // Clear the existing list
-                    users.addAll(userList); // Add all users
+                    users.clear();
+                    users.addAll(userList);
                     userAdapter.notifyDataSetChanged();
                 }
             });
@@ -179,11 +155,11 @@ public class ChatsFragment extends Fragment {
                 List<User> firebaseUsers = new ArrayList<>();
                 for (DataSnapshot userSnap : snapshot.getChildren()) {
                     User user = userSnap.getValue(User.class);
-                    if (user != null ) {
+                    if (user != null) {
                         if (!user.getUid().equals(currentUserId)) {
                             firebaseUsers.add(user);
-                        }else {
-                            firebaseUsers.add(0,user);
+                        } else {
+                            firebaseUsers.add(0, user);
                         }
                     }
                 }
@@ -204,6 +180,19 @@ public class ChatsFragment extends Fragment {
         });
     }
 
+    public void searchUsers(String query) {
+        String userInput = query.toLowerCase();
+        List<User> filteredUsers = new ArrayList<>();
+
+        for (User user : users) {
+            if (user.getName().toLowerCase().contains(userInput) || user.getPhoneNumber().toLowerCase().contains(userInput)) {
+                filteredUsers.add(user);
+            }
+        }
+
+        UserAdapter userAdapter1 = new UserAdapter(getContext(), (ArrayList<User>) filteredUsers);
+        fragmentChatsBinding.chatRecyclerView.setAdapter(userAdapter1);
+    }
 
     @Override
     public void onDestroyView() {
@@ -211,4 +200,3 @@ public class ChatsFragment extends Fragment {
         fragmentChatsBinding = null;
     }
 }
-

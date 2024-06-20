@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
@@ -150,8 +151,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-
 //        // Set initial fragment
 //        if (savedInstanceState == null) {
 //            getSupportFragmentManager().beginTransaction()
@@ -168,35 +167,52 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                recyclerView.setVisibility(View.GONE);
-                return true;
+                // Handle search submit
+                return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                searchUsers(newText);
+                // Pass search query to ChatsFragment
+                Fragment currentFragment = getSupportFragmentManager().findFragmentByTag("f" + viewPager.getCurrentItem());
+                if (currentFragment instanceof ChatsFragment) {
+                    ((ChatsFragment) currentFragment).searchUsers(newText);
+                }
                 return true;
             }
         });
-        return super.onCreateOptionsMenu(menu);
+        return true;
     }
 
+
     private void searchUsers(String query) {
+        searchLocalDatabase(query);
+        searchFirebaseDatabase(query);
+    }
+
+    private void searchLocalDatabase(String query) {
+        executor.execute(() -> {
+            List<User> localResults =appDatabase.userDao().getUserByName(query);
+            mainHandler.post(() -> {
+                showSearchResults(localResults);
+            });
+        });
+    }
+
+    private void searchFirebaseDatabase(String query) {
         database.getReference().child("Users").orderByChild("name")
                 .startAt(query).endAt(query + "\uf8ff").addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        ArrayList<User> searchResults = new ArrayList<>();
+                        ArrayList<User> firebaseResults = new ArrayList<>();
                         for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                             User user = dataSnapshot.getValue(User.class);
                             if (user != null && !user.getUid().equals(auth.getCurrentUser().getUid())) {
-                                searchResults.add(user);
+                                firebaseResults.add(user);
                             }
                         }
-                        users.addAll(searchResults);
-                        showSearchResults(searchResults);
+                        showSearchResults(firebaseResults);
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         Toast.makeText(MainActivity.this, "Error searching users", Toast.LENGTH_SHORT).show();
@@ -205,35 +221,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showSearchResults(List<User> searchResults) {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-//        builder.setTitle("Search Results");
-
-//        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-        recyclerView.setVisibility(View.VISIBLE);
-        UserAdapter searchAdapter = new UserAdapter(MainActivity.this, users);
-        recyclerView.setAdapter(searchAdapter);
-
-//        builder.setView(recyclerView);
-//        AlertDialog dialog = builder.create();
-//        dialog.show();
-
-        searchAdapter.setOnItemClickListener(new UserAdapter.OnItemClickListener() {
+        users.clear();
+        users.addAll(searchResults);
+        UserAdapter userAdapter1=new UserAdapter(MainActivity.this,users);
+        addUserToLocalDatabase(users);
+        recyclerView.setAdapter(userAdapter1);
+        userAdapter1.setOnItemClickListener(new UserAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(User user) {
-                addUserToLocalDatabase(user);
-//                Toast.makeText(MainActivity.this,"new user is clicked",Toast.LENGTH_SHORT);
-//                Intent intent=new Intent(MainActivity.this, ChatsFragment.class);
-//                intent.putExtra("Contact_name",user.getName());
-//                intent.putExtra("chat_profile", user.getProfileImage());
-//                intent.putExtra("number",user.getPhoneNumber().toString());
-//                intent.putExtra("uid",user.getUid());
-//                startActivity(intent);
-                recyclerView.setVisibility(View.GONE);
-//                dialog.dismiss();
+                Intent intent=new Intent(MainActivity.this, ChatsActivity.class);
+                intent.putExtra("Contact_name",user.getName());
+                intent.putExtra("chat_profile", user.getProfileImage());
+                intent.putExtra("number",user.getPhoneNumber());
+                intent.putExtra("uid",user.getUid());
+                startActivity(intent);
             }
         });
+        userAdapter.notifyDataSetChanged();
     }
-
     private void addUserToLocalDatabase(User user) {
         executor.execute(() -> {
             appDatabase.userDao().insertUser(user);
@@ -243,8 +248,15 @@ public class MainActivity extends AppCompatActivity {
             });
         });
     }
-
-
+    private void addUserToLocalDatabase(List<User> user) {
+        executor.execute(() -> {
+            appDatabase.userDao().insertAllUsers(user);
+            mainHandler.post(() -> {
+                users.addAll(user);
+                userAdapter.notifyDataSetChanged();
+            });
+        });
+    }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -267,6 +279,6 @@ public class MainActivity extends AppCompatActivity {
         } else if(item.getItemId()==R.id.search) {
             Toast.makeText(this, "search clicked", Toast.LENGTH_SHORT).show();
         }
-        return super.onOptionsItemSelected(item);
+        return true;
     }
 }

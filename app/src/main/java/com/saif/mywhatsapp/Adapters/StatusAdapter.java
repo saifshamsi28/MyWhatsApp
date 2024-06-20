@@ -2,6 +2,9 @@ package com.saif.mywhatsapp.Adapters;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,16 +18,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.saif.mywhatsapp.Activities.MainActivity;
+import com.saif.mywhatsapp.AppDatabase;
+import com.saif.mywhatsapp.DatabaseClient;
 import com.saif.mywhatsapp.Models.Status;
+import com.saif.mywhatsapp.Models.User;
 import com.saif.mywhatsapp.Models.UserStatus;
 import com.saif.mywhatsapp.R;
-import com.saif.mywhatsapp.databinding.ItemStatusMeBinding;
 import com.saif.mywhatsapp.databinding.ItemStatusOtherBinding;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import omari.hamza.storyview.StoryView;
 import omari.hamza.storyview.callback.StoryClickListeners;
@@ -32,23 +39,18 @@ import omari.hamza.storyview.model.MyStory;
 
 public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private static final int VIEW_TYPE_ME = 1;
-    private static final int VIEW_TYPE_OTHER = 2;
-
     private final Context context;
     private final ArrayList<UserStatus> userStatuses;
+    private AppDatabase appDatabase;
+    private final Executor executor= Executors.newSingleThreadExecutor();
+    private final Handler handler=new Handler(Looper.getMainLooper());
+    private User user;
 
     public StatusAdapter(Context context, ArrayList<UserStatus> userStatuses) {
         this.context = context;
         this.userStatuses = userStatuses;
+        appDatabase= DatabaseClient.getInstance(context).getAppDatabase();
     }
-
-//    @Override
-//    public int getItemViewType(int position) {
-//        UserStatus userStatus = userStatuses.get(position);
-//        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-//        return currentUserId.equals(userStatus.getUserId()) ? VIEW_TYPE_ME : VIEW_TYPE_OTHER;
-//    }
 
     @Override
     public int getItemCount() {
@@ -58,38 +60,14 @@ public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-//        if (viewType == VIEW_TYPE_ME) {
-//            View myStatusView = LayoutInflater.from(context).inflate(R.layout.item_status_me, parent, false);
-//            return new MyStatusViewHolder(myStatusView);
-//        } else {
             View otherStatusView = LayoutInflater.from(context).inflate(R.layout.item_status_other, parent, false);
             return new OtherStatusViewHolder(otherStatusView);
-//        }
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         UserStatus userStatus = userStatuses.get(position);
-//        if (holder instanceof MyStatusViewHolder) {
-//            ((MyStatusViewHolder) holder).bind(userStatus);
-//        else holder instanceof OtherStatusViewHolder ;
             ((OtherStatusViewHolder)holder).bind(userStatus);
-//        }
-    }
-
-    public class MyStatusViewHolder extends RecyclerView.ViewHolder {
-        private final ItemStatusMeBinding binding;
-
-        public MyStatusViewHolder(View itemView) {
-            super(itemView);
-            binding = ItemStatusMeBinding.bind(itemView);
-        }
-
-        public void bind(UserStatus userStatus) {
-
-        }
-
-
     }
 
     public class OtherStatusViewHolder extends RecyclerView.ViewHolder {
@@ -105,24 +83,37 @@ public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
 
         public void bind(UserStatus userStatus) {
-//            myStatusFragmentLayout.addView(myStatusItemLayout);
             if (userStatus.getStatuses() != null && !userStatus.getStatuses().isEmpty()) {
                 Date date = new Date(userStatus.getLastUpdated());
                 SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm a", Locale.getDefault());
                 String statusTime = formatTime.format(date);
                 SimpleDateFormat formatDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
                 String statusDate = formatDate.format(date);
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        user = appDatabase.userDao().getUserByUid(userStatus.getUserId());
+                    }
+                });
                 if(statusTime.startsWith("0"))
                     statusTime=statusTime.substring(1);
                 Status lastStatus = userStatus.getStatuses().get(userStatus.getStatuses().size() - 1);
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        user=appDatabase.userDao().getUserByUid(userStatus.getUserId());
+                        binding.othersStatusContactName.setText(user.getName());
+                    }
+                });
                 binding.othersCircularStatusView.setPortionsCount(userStatus.getStatuses().size());
-                binding.othersStatusContactName.setText(userStatus.getName());
+
                 Glide.with(context).load(lastStatus.getImageUrl()).into(binding.othersStatusImage);
                 binding.othersCircularStatusView.setVisibility(View.VISIBLE);
                 String finalStatusTime = statusTime;
                 binding.otherStatusLayout.setOnClickListener(v -> showStoryView(userStatus, finalStatusTime,statusDate));
                 binding.othersImageLayout.setVisibility(View.VISIBLE);
                 binding.othersStatusContactName.setText(userStatus.getName());
+                Log.e("log","log in bind method : "+userStatus.getUserId());
                 String currentDate=formatDate.format(new Date());
                 if(currentDate.equals(statusDate)) {
                     binding.othersStatusTime.setText(statusTime);
@@ -153,12 +144,13 @@ public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 thisStatusTime="Yesterday, "+statusTime;
             }
 
+            Log.e("log","log in showStoryView method : "+userStatus.getUserId());
             new StoryView.Builder(((MainActivity) context).getSupportFragmentManager())
                     .setStoriesList(myStories)
                     .setStoryDuration(5000)
-                    .setTitleText(userStatus.getName())
+                    .setTitleText(user.getName())
                     .setSubtitleText(thisStatusTime)
-                    .setTitleLogoUrl(userStatus.getProfileImage())
+                    .setTitleLogoUrl(user.getProfileImage())
                     .setStoryClickListeners(new StoryClickListeners() {
                         @Override
                         public void onDescriptionClickListener(int position) {

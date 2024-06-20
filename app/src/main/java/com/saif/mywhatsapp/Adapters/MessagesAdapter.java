@@ -4,6 +4,9 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.LinearLayout;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.github.pgreze.reactions.ReactionPopup;
@@ -72,6 +75,22 @@ public class MessagesAdapter extends RecyclerView.Adapter{
             String formattedTime = timeFormat.format(date);
             // Setting the formatted timestamp(in 12hours AM/PM) to the timestamp-TextView
             viewHolder.sendBinding.timestamp.setText(formattedTime);
+            viewHolder.sendBinding.layoutChatSendContainer.post(() -> {
+                // Calculate combined width of message and timestamp
+                int messageWidth = viewHolder.sendBinding.message.getMeasuredWidth() + viewHolder.sendBinding.message.getPaddingLeft() + viewHolder.sendBinding.message.getPaddingRight();
+                int timestampWidth = viewHolder.sendBinding.timestamp.getMeasuredWidth() + viewHolder.sendBinding.timestamp.getPaddingLeft() + viewHolder.sendBinding.timestamp.getPaddingRight();
+                int combinedWidth = messageWidth + timestampWidth;
+
+                // Calculate the available width (excluding padding/margin if necessary)
+                int maxWidth = viewHolder.sendBinding.message.getMaxWidth();
+                // Adjust orientation based on the combined width
+                if (combinedWidth <= maxWidth) {
+                    viewHolder.sendBinding.layoutChatSendContainer.setOrientation(LinearLayout.HORIZONTAL);
+                } else {
+//                viewHolder.sendBinding.message.setPaddingRelative(24, 16,16,8);
+                    viewHolder.sendBinding.layoutChatSendContainer.setOrientation(LinearLayout.VERTICAL);
+                }
+            });
 
             // Format the date for the header(for every new day)
             SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
@@ -108,6 +127,29 @@ public class MessagesAdapter extends RecyclerView.Adapter{
 
             // Set the formatted time to the timestamp-TextView
             viewHolder.receiveBinding.timestamp.setText(formattedDate);
+            viewHolder.receiveBinding.layoutChatReceiveContainer.getViewTreeObserver().addOnGlobalLayoutListener(
+                    new ViewTreeObserver.OnGlobalLayoutListener() {
+                        @Override
+                        public void onGlobalLayout() {
+                            // Get the width of the layout containing both message and timestamp
+                            int messageWidth = viewHolder.receiveBinding.message.getWidth() + viewHolder.receiveBinding.message.getPaddingLeft() + viewHolder.receiveBinding.message.getPaddingRight();
+                            int timestampWidth = viewHolder.receiveBinding.timestamp.getWidth() + viewHolder.receiveBinding.timestamp.getPaddingLeft() + viewHolder.receiveBinding.timestamp.getPaddingRight();
+                            int combinedWidth = messageWidth + timestampWidth;
+
+                            // Calculate the available width (excluding padding/margin if necessary)
+                            int maxWidth = viewHolder.receiveBinding.message.getMaxWidth();
+
+                            // Adjust orientation based on the combined width
+                            if (combinedWidth <= maxWidth) {
+                                viewHolder.receiveBinding.layoutChatReceiveContainer.setOrientation(LinearLayout.HORIZONTAL);
+                            } else {
+                                viewHolder.receiveBinding.layoutChatReceiveContainer.setOrientation(LinearLayout.VERTICAL);
+                            }
+
+                            // Remove the listener to avoid repeated calls
+                            viewHolder.receiveBinding.layoutChatReceiveContainer.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        }
+                    });
 
             //to format the date for message date header (for every new day)
             SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
