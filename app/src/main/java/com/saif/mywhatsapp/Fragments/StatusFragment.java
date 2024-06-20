@@ -50,6 +50,7 @@ import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import omari.hamza.storyview.StoryView;
+import omari.hamza.storyview.callback.OnStoryChangedCallback;
 import omari.hamza.storyview.callback.StoryClickListeners;
 import omari.hamza.storyview.model.MyStory;
 
@@ -70,6 +71,8 @@ public class StatusFragment extends Fragment {
 
     private final Executor executor= Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler();
+    private StoryView.Builder builder;
+
     private final Runnable removeExpiredStatusesTask = new Runnable() {
         @Override
         public void run() {
@@ -389,42 +392,46 @@ public class StatusFragment extends Fragment {
     }
 
     private String[] formatStatusTime(Date date) {
-// Date date = new Date(lastStatus.getTimeStamps());
         SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm a", Locale.getDefault());
                 String statusTime = formatTime.format(date);
         SimpleDateFormat formatDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
         String statusDate = formatDate.format(date);
         return new String[]{statusTime,statusDate};
     }
+
     private void showMyStatuses(UserStatus myUserStatus) {
         ArrayList<MyStory> myStories = new ArrayList<>();
+        ArrayList<String> timestamps = new ArrayList<>();
+
         SimpleDateFormat formatDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
         String currentDate = formatDate.format(new Date());
-        Status lastStatus=myUserStatus.getStatuses().get(myUserStatus.getStatuses().size()-1);
-        String statusTime = "";
-        String statusDate;
+//        final int[] storyPosition = {0};
+
         for (Status status : myUserStatus.getStatuses()) {
             myStories.add(new MyStory(status.getImageUrl()));
 
-            statusTime = formatStatusTime(new Date(status.getTimeStamps()))[0];
-            statusDate = formatStatusTime(new Date(status.getTimeStamps()))[1];
-            String thisStatusTime = null;
+            String statusTime = formatStatusTime(new Date(status.getTimeStamps()))[0];
+            String statusDate = formatStatusTime(new Date(status.getTimeStamps()))[1];
+
             if (currentDate.equals(statusDate)) {
                 statusTime = "Today, " + statusTime;
             } else {
                 statusTime = "Yesterday, " + statusTime;
             }
+
+            timestamps.add(statusTime);
         }
-        new StoryView.Builder(((Fragment) StatusFragment.this).getChildFragmentManager())
+
+        builder= new StoryView.Builder(StatusFragment.this.getChildFragmentManager())
                 .setStoriesList(myStories) // Required
                 .setStoryDuration(5000) // Default is 2000 Millis (2 Seconds)
                 .setTitleText("My status") // Default is Hidden
-                .setSubtitleText(statusTime) // Default is Hidden
+                .setSubtitleText(timestamps.get(0)) // Set the subtitle text of the first status
                 .setTitleLogoUrl(currentUser.getProfileImage()) // Default is Hidden
                 .setStoryClickListeners(new StoryClickListeners() {
                     @Override
                     public void onDescriptionClickListener(int position) {
-                        //your action
+                        // Update the subtitle text when user clicks on a status
                     }
 
                     @Override
@@ -432,9 +439,17 @@ public class StatusFragment extends Fragment {
                         //your action
                     }
                 }) // Optional Listeners
-                .build() // Must be called before calling show method
-                .show();
+                .setOnStoryChangedCallback(new OnStoryChangedCallback() {
+                    @Override
+                    public void storyChanged(int position) {
+                        if (position < timestamps.size()) {
+                            builder.setSubtitleText(timestamps.get(position));
+                        }
+                    }})
+                .build();
+        builder.show();
     }
+
     private  void setThemeForHomeScreen() {
         int nightModeFlags = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         int color;

@@ -34,6 +34,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import omari.hamza.storyview.StoryView;
+import omari.hamza.storyview.callback.OnStoryChangedCallback;
 import omari.hamza.storyview.callback.StoryClickListeners;
 import omari.hamza.storyview.model.MyStory;
 
@@ -45,6 +46,7 @@ public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private final Executor executor= Executors.newSingleThreadExecutor();
     private final Handler handler=new Handler(Looper.getMainLooper());
     private User user;
+    private StoryView.Builder storyBuilder;
 
     public StatusAdapter(Context context, ArrayList<UserStatus> userStatuses) {
         this.context = context;
@@ -110,7 +112,7 @@ public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 Glide.with(context).load(lastStatus.getImageUrl()).into(binding.othersStatusImage);
                 binding.othersCircularStatusView.setVisibility(View.VISIBLE);
                 String finalStatusTime = statusTime;
-                binding.otherStatusLayout.setOnClickListener(v -> showStoryView(userStatus, finalStatusTime,statusDate));
+                binding.otherStatusLayout.setOnClickListener(v -> showStoryView(userStatus));
                 binding.othersImageLayout.setVisibility(View.VISIBLE);
                 binding.othersStatusContactName.setText(userStatus.getName());
                 Log.e("log","log in bind method : "+userStatus.getUserId());
@@ -127,29 +129,34 @@ public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             setThemeForHomeScreen(binding.othersStatusContactName,binding.othersStatusTime);
         }
 
-        private void showStoryView(UserStatus userStatus, String statusTime,String statusDate) {
+        private void showStoryView(UserStatus userStatus) {
             ArrayList<MyStory> myStories = new ArrayList<>();
+            ArrayList<String> timestamps = new ArrayList<>();
+            String currentDate=formatStatusTime(new Date())[1];
             for (Status story : userStatus.getStatuses()) {
                 myStories.add(new MyStory(story.getImageUrl()));
-            }
-//            Date date = new Date(userStatus.getLastUpdated());
-//            SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-//            String statusTime = formatTime.format(date);
-            SimpleDateFormat formatDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
-            String currentDate = formatDate.format(new Date());
-            String thisStatusTime=null;
-            if(currentDate.equals(statusDate)){
-                thisStatusTime="Today, "+statusTime;
-            }else {
-                thisStatusTime="Yesterday, "+statusTime;
+
+                String statusTime = formatStatusTime(new Date(story.getTimeStamps()))[0];
+                String statusDate = formatStatusTime(new Date(story.getTimeStamps()))[1];
+
+                if(statusTime.startsWith("0"))
+                    statusTime=statusTime.substring(1);
+
+                if (currentDate.equals(statusDate)) {
+                    statusTime = "Today, " + statusTime;
+                } else {
+                    statusTime = "Yesterday, " + statusTime;
+                }
+
+                timestamps.add(statusTime);
             }
 
             Log.e("log","log in showStoryView method : "+userStatus.getUserId());
-            new StoryView.Builder(((MainActivity) context).getSupportFragmentManager())
+            storyBuilder=new StoryView.Builder(((MainActivity) context).getSupportFragmentManager())
                     .setStoriesList(myStories)
                     .setStoryDuration(5000)
                     .setTitleText(user.getName())
-                    .setSubtitleText(thisStatusTime)
+                    .setSubtitleText(timestamps.get(0))
                     .setTitleLogoUrl(user.getProfileImage())
                     .setStoryClickListeners(new StoryClickListeners() {
                         @Override
@@ -162,9 +169,24 @@ public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                             // Handle title icon click
                         }
                     })
-                    .build()
-                    .show();
+                    .setOnStoryChangedCallback(new OnStoryChangedCallback() {
+                        @Override
+                        public void storyChanged(int position) {
+                            storyBuilder.setSubtitleText(timestamps.get(position));
+                        }
+                    })
+                    .build();
+            storyBuilder.show();
         }
+    }
+
+    private String[] formatStatusTime(Date date) {
+// Date date = new Date(lastStatus.getTimeStamps());
+        SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+        String statusTime = formatTime.format(date);
+        SimpleDateFormat formatDate = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
+        String statusDate = formatDate.format(date);
+        return new String[]{statusTime,statusDate};
     }
 
     private  void setThemeForHomeScreen(TextView statusContactName, TextView statusTime) {
