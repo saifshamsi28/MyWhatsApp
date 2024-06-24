@@ -16,6 +16,10 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -69,7 +73,7 @@ public class ChatsFragment extends Fragment {
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         users = new ArrayList<>();
-        userAdapter = new UserAdapter(requireContext(), users);
+        userAdapter = new UserAdapter(requireContext(), users,true);
 
         fragmentChatsBinding.chatRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         fragmentChatsBinding.chatRecyclerView.setAdapter(userAdapter);
@@ -122,7 +126,56 @@ public class ChatsFragment extends Fragment {
 
         // Load other users from Room or Firebase
         loadUsers();
+        // added this because mistakenly deleted the firebase database user but users still exist in the local database
+//        updateLocalUsersToFirebaseDatabase();
     }
+
+//    private void updateLocalUsersToFirebaseDatabase() {
+//        executor.execute(() -> {
+//            List<User> userList = appDatabase.userDao().getAllUsers(); // Fetch all users from local database
+//
+//            Log.e("users", "userList size: " + userList.size() + " users size: " + users.size());
+//            if (!userList.isEmpty()) {
+//                users.clear();
+//                for (User user : userList) {
+//                    database.getReference().child("Users").child(user.getUid())
+//                            .addListenerForSingleValueEvent(new ValueEventListener() {
+//                                @Override
+//                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                                    if (!snapshot.exists()) {
+//                                        database.getReference().child("Users").child(user.getUid())
+//                                                .setValue(user).addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                                    @Override
+//                                                    public void onSuccess(@NonNull Void unused) {
+//                                                        Log.e("Firebase", "User: " + user.getName() + " added to firebase");
+//                                                        mainHandler.post(() -> {
+//                                                            if (!users.contains(user)) {
+//                                                                users.add(user);
+//                                                                userAdapter.notifyDataSetChanged();
+//                                                            }
+//                                                        });
+//                                                    }
+//                                                }).addOnFailureListener(new OnFailureListener() {
+//                                                    @Override
+//                                                    public void onFailure(@NonNull Exception e) {
+//                                                        Log.e("Firebase fail", "User adding failed for user: " + user.getUid());
+//                                                    }
+//                                                });
+//                                    }
+//                                }
+//
+//                                @Override
+//                                public void onCancelled(@NonNull DatabaseError error) {
+//                                    Log.e("Firebase Error", "Failed to check if user exists: " + user.getUid());
+//                                }
+//                            });
+//                }
+//            } else {
+//                Log.e("Local Database", "No users found in the local database");
+//            }
+//        });
+//    }
+
 
     private void initializeDatabase() {
         // Initialize the AppDatabase using DatabaseClient
@@ -190,7 +243,7 @@ public class ChatsFragment extends Fragment {
             }
         }
 
-        UserAdapter userAdapter1 = new UserAdapter(getContext(), (ArrayList<User>) filteredUsers);
+        UserAdapter userAdapter1 = new UserAdapter(getContext(), (ArrayList<User>) filteredUsers,true);
         fragmentChatsBinding.chatRecyclerView.setAdapter(userAdapter1);
     }
 

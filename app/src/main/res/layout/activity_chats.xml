@@ -56,12 +56,11 @@
 
                 <TextView
                     android:id="@+id/status"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Online"
-                    android:textColor="@color/white"
-                    android:visibility="gone" />
+                    android:layout_gravity="start"
+                    android:textColor="@color/white" />
             </LinearLayout>
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
@@ -70,14 +69,16 @@
         android:id="@+id/chat_recyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="visible"
-        tools:listitem="@layout/item_receive"
         android:paddingBottom="5dp"
+        android:visibility="visible"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/cardView"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+        app:layout_constraintVertical_bias="0.0"
+        tools:listitem="@layout/item_receive" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
@@ -113,7 +114,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
-                android:hint="Type a message..."
+                android:hint="Message..."
                 android:inputType="textMultiLine"
                 android:lines="1"
                 android:maxLines="6"
@@ -148,10 +149,24 @@
         android:layout_height="45dp"
         android:layout_marginEnd="8dp"
         android:background="@drawable/circle_greenish_blue"
-        android:padding="10dp"
+        android:padding="12dp"
+        android:paddingStart="14dp"
         app:layout_constraintBottom_toBottomOf="@+id/cardView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/cardView"
         app:srcCompat="@drawable/icon_send"
         app:tint="@color/white" />
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/bottom_scroll_btn"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginBottom="5dp"
+        android:padding="5dp"
+        android:background="@drawable/circle_bg"
+        android:backgroundTint="#FFFFFF"
+        android:src="@drawable/scroll_to_bottom"
+        app:layout_constraintBottom_toTopOf="@+id/sendBtn"
+        app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

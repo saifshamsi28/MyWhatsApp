@@ -3,8 +3,10 @@ package com.saif.mywhatsapp.Models;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.io.Serializable;
+
 @Entity
-public class Status {
+public class Status implements Serializable {
 
     @PrimaryKey(autoGenerate = true)
     private int id;

@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.packaging.defaultExcludes
+
 plugins {
     alias(libs.plugins.androidApplication)
     id("com.google.gms.google-services")
@@ -10,6 +12,17 @@ android {
     buildFeatures {
         viewBinding=true
     }
+
+    packaging {
+        resources.excludes.add("META-INF/DEPENDENCIES")
+        resources.excludes.add("META-INF/LICENSE")
+        resources.excludes.add("META-INF/LICENSE.txt")
+        resources.excludes.add("META-INF/license.txt")
+        resources.excludes.add("META-INF/NOTICE")
+        resources.excludes.add("META-INF/NOTICE.txt")
+        resources.excludes.add("META-INF/notice.txt")
+    }
+
 
     defaultConfig {
         applicationId = "com.saif.mywhatsapp"
@@ -44,6 +57,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.room.common.jvm)
     implementation(libs.room.runtime)
+    implementation(libs.lifecycle.process)
+    implementation(libs.firebase.messaging)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -61,6 +76,10 @@ dependencies {
     implementation ("com.github.OMARIHAMZA:StoryView:1.0.2-alpha")
     implementation ("com.facebook.shimmer:shimmer:0.5.0")
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    implementation ("com.google.auth:google-auth-library-oauth2-http:1.20.0")
     annotationProcessor(libs.room.compiler)
+
 //    implementation ("com.github.sharish:ShimmerRecyclerView:v1.3")
 }

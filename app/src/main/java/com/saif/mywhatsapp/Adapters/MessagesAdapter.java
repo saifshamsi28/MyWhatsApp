@@ -76,7 +76,7 @@ public class MessagesAdapter extends RecyclerView.Adapter{
             // Setting the formatted timestamp(in 12hours AM/PM) to the timestamp-TextView
             viewHolder.sendBinding.timestamp.setText(formattedTime);
             viewHolder.sendBinding.layoutChatSendContainer.post(() -> {
-                // Calculate combined width of message and timestamp
+                // combined width of message and timestamp
                 int messageWidth = viewHolder.sendBinding.message.getMeasuredWidth() + viewHolder.sendBinding.message.getPaddingLeft() + viewHolder.sendBinding.message.getPaddingRight();
                 int timestampWidth = viewHolder.sendBinding.timestamp.getMeasuredWidth() + viewHolder.sendBinding.timestamp.getPaddingLeft() + viewHolder.sendBinding.timestamp.getPaddingRight();
                 int combinedWidth = messageWidth + timestampWidth;
@@ -131,7 +131,6 @@ public class MessagesAdapter extends RecyclerView.Adapter{
                     new ViewTreeObserver.OnGlobalLayoutListener() {
                         @Override
                         public void onGlobalLayout() {
-                            // Get the width of the layout containing both message and timestamp
                             int messageWidth = viewHolder.receiveBinding.message.getWidth() + viewHolder.receiveBinding.message.getPaddingLeft() + viewHolder.receiveBinding.message.getPaddingRight();
                             int timestampWidth = viewHolder.receiveBinding.timestamp.getWidth() + viewHolder.receiveBinding.timestamp.getPaddingLeft() + viewHolder.receiveBinding.timestamp.getPaddingRight();
                             int combinedWidth = messageWidth + timestampWidth;
@@ -173,8 +172,8 @@ public class MessagesAdapter extends RecyclerView.Adapter{
                 }
             }
         }
-    }
 
+    }
     @Override
     public int getItemViewType(int position) {
         Message message= messages.get(position);

@@ -15,17 +15,20 @@ public class User {
     private String name;
     private String profileImage;
     private String about;
+    private String status="offline";
+    private String fcmToken;
 
     // Default no-args constructor required by Firebase
     public User() {
     }
 
-    public User(String uid, String name, @NonNull String phoneNumber, String profileImage, String about) {
+    public User(String uid, String name, @NonNull String phoneNumber, String profileImage, String about, String status) {
         this.uid = uid;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.profileImage = profileImage;
         this.about = about;
+        this.status = status;
     }
 
     @NonNull
@@ -67,5 +70,19 @@ public class User {
 
     public void setAbout(String about) {
         this.about = about;
+    }
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getFcmToken() {
+        return fcmToken;
+    }
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 }

@@ -2,6 +2,7 @@ package com.saif.mywhatsapp.Activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -36,6 +37,7 @@ import com.saif.mywhatsapp.Models.User;
 import com.saif.mywhatsapp.R;
 import com.saif.mywhatsapp.databinding.ActivitySetUpProfileBinding;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -50,6 +52,10 @@ public class SetUpProfileActivity extends AppCompatActivity {
     private static final int IMAGE_PICK_CODE = 28;
     AppDatabase appDatabase;
     User currentUser;
+    private final Uri defaultUri= Uri.parse("https://firebasestorage.googleapis.com/v0/b/mywhatsapp-2d301.appspot.com/o/avatar.png?alt=media&token=d1196659-20bc-4d9f-af24-ad2f74795faf");
+    private final String defaultName="Unknown User";
+    private final String defaultAbout="Hey there i m using MyWhatsApp";
+
     private final Executor executor= Executors.newSingleThreadExecutor();
     private final Handler mainHandler=new Handler(Looper.getMainLooper());
 
@@ -64,8 +70,12 @@ public class SetUpProfileActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        Window window=getWindow();
-        window.setStatusBarColor(ContextCompat.getColor(this,R.color.GreenishBlue));
+        if (setThemeForHomeScreen() == 2) {
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.GreenishBlue));
+        } else {
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+        }
+        setThemeForHomeScreen();
         this.setTitle("Profile");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         auth = FirebaseAuth.getInstance();
@@ -73,18 +83,24 @@ public class SetUpProfileActivity extends AppCompatActivity {
         storage = FirebaseStorage.getInstance();
         appDatabase = DatabaseClient.getInstance(getApplicationContext()).getAppDatabase();
 
-        if(getIntent().getStringExtra("source")!=null && getIntent().getStringExtra("source").equals("MainActivity")){
-            setUpProfileBinding.nameBox.setText(getIntent().getStringExtra("name"));
-            setUpProfileBinding.aboutUser.setText(getIntent().getStringExtra("about"));
-            Uri profileUri= Uri.parse(getIntent().getStringExtra("profileUri"));
+        if (getIntent().getStringExtra("source") != null){
+            if (Objects.equals(getIntent().getStringExtra("source"), "MainActivity")) {
+
+                setUpProfileBinding.nameBox.setText(getIntent().getStringExtra("name"));
+                setUpProfileBinding.aboutUser.setText(getIntent().getStringExtra("about"));
+                Uri profileUri=defaultUri;
+                if(getIntent().getStringExtra("profileUri")!=null) {
+                    profileUri = Uri.parse(getIntent().getStringExtra("profileUri"));
+                }
 //
 //            setUpProfileBinding.nameBox.setText(currentUser.getName());
 //            setUpProfileBinding.aboutUser.setText(currentUser.getAbout());
 //            setUpProfileBinding.nameBox.setText(currentUser.getName());
-            Glide.with(this).load(profileUri)
-                    .placeholder(R.drawable.avatar)
-                    .into(setUpProfileBinding.profileImg);
-        }
+                Glide.with(this).load(profileUri)
+                        .placeholder(R.drawable.avatar)
+                        .into(setUpProfileBinding.profileImg);
+            }
+    }
 
 
         setUpProfileBinding.phone.setText(auth.getCurrentUser().getPhoneNumber().substring(0,3)
@@ -145,7 +161,10 @@ public class SetUpProfileActivity extends AppCompatActivity {
                         }
                     });
                 } else {
-                    updateUserProfile(name, about, profileUri.toString());
+                    if(profileUri!=null)
+                        updateUserProfile(name, about, profileUri.toString());
+                    else
+                        updateUserProfile(name,about, String.valueOf(defaultUri));
                 }
             }
         });
@@ -157,7 +176,7 @@ public class SetUpProfileActivity extends AppCompatActivity {
         if (about.length() == 0) {
             about = "Hey there I am using MyWhatsApp";
         }
-        User user = new User(uid, name, phone, imageUrl, about);
+        User user = new User(uid, name, phone, imageUrl, about,"online");
         currentUser=user;
 
         executor.execute(() -> {
@@ -172,7 +191,7 @@ public class SetUpProfileActivity extends AppCompatActivity {
                     public void onSuccess(Void unused) {
                         progressDialog.dismiss();
                         Toast.makeText(SetUpProfileActivity.this, "Profile SetUp successfully", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(SetUpProfileActivity.this, MainActivity.class);
+                        Intent intent = new Intent(SetUpProfileActivity.this, SplashActivity.class);
                         startActivity(intent);
                         finish();
                     }
@@ -194,5 +213,25 @@ public class SetUpProfileActivity extends AppCompatActivity {
             finish();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private  int setThemeForHomeScreen() {
+        int nightModeFlags = this.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        int color;
+        int color2;
+        switch (nightModeFlags) {
+            case Configuration.UI_MODE_NIGHT_YES:
+                color = ContextCompat.getColor(this, R.color.primaryTextColor); // White for dark mode
+                color2 = ContextCompat.getColor(this, R.color.secondaryTextColor); // White for dark mode
+                setUpProfileBinding.aboutUser.setTextColor(color2);
+                return 1;
+            case Configuration.UI_MODE_NIGHT_NO:
+            case Configuration.UI_MODE_NIGHT_UNDEFINED:
+            default:
+                color = ContextCompat.getColor(this, R.color.primaryTextColor); // Black for light mode
+                color2 = ContextCompat.getColor(this, R.color.secondaryTextColor); // Black for light mode
+                setUpProfileBinding.aboutUser.setTextColor(color2);
+                return 2;
+        }
     }
 }

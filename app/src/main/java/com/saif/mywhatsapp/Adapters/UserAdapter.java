@@ -35,13 +35,15 @@ import java.util.Locale;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
 
-     Context context;
-    ArrayList<User> users;
+     private Context context;
+    private ArrayList<User> users;
     private OnItemClickListener listener;
+    private boolean isChat;
 
-    public UserAdapter(Context context, ArrayList<User> users) {
+    public UserAdapter(Context context, ArrayList<User> users, boolean isChat) {
         this.context = context;
         this.users = users;
+        this.isChat = isChat;
     }
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
@@ -61,6 +63,23 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         }else {
             holder.conversationBinding.contactName.setText(user.getName());
         }
+
+        if(isChat){
+            if(!user.getUid().equals(FirebaseAuth.getInstance().getUid())) {
+                if (user.getStatus().equals("online")) {
+                    holder.conversationBinding.status.setVisibility(View.VISIBLE);
+                } else {
+                    holder.conversationBinding.status.setVisibility(View.GONE);
+                }
+            }else {
+                holder.conversationBinding.status.setVisibility(View.GONE);
+            }
+        }else {
+            holder.conversationBinding.status.setVisibility(View.GONE);
+        }
+
+
+
         ImageView imageView=Glide.with(context)
                 .load(user.getProfileImage())
                 .placeholder(R.drawable.avatar)
@@ -105,15 +124,11 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
                 intent.putExtra("Contact_name",holder.conversationBinding.contactName.getText().toString());
                 intent.putExtra("chat_profile", user.getProfileImage());
                 intent.putExtra("number",user.getPhoneNumber().toString());
-                intent.putExtra("uid",user.getUid());
+                intent.putExtra("userId",user.getUid());
+                intent.putExtra("receiverFcmToken",user.getFcmToken());
                 context.startActivity(intent);
             }
         });
-    }
-
-    public void updateUserList(List<User> newUsers) {
-        users = new ArrayList<>(newUsers);
-        notifyDataSetChanged();
     }
 
     private  void setThemeForHomeScreen(TextView contactName, TextView recentMessage, TextView messageTime) {
@@ -135,6 +150,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         contactName.setTextColor(color);
         recentMessage.setTextColor(color2);
         messageTime.setTextColor(color2);
+
     }
 
     @Override

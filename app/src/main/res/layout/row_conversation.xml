@@ -15,6 +15,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/status"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginStart="35dp"
+        android:layout_marginTop="35dp"
+        android:src="#05B1C0"
+        app:layout_constraintStart_toStartOf="@+id/contact_img"
+        app:layout_constraintTop_toTopOf="@+id/contact_img" />
+
     <TextView
         android:id="@+id/contact_name"
         android:layout_width="0dp"
@@ -32,7 +42,7 @@
     <TextView
         android:id="@+id/recent_message"
         android:layout_width="0dp"
-        android:layout_height="15dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="8dp"
         android:text="Tap to check"

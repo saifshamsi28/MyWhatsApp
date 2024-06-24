@@ -38,7 +38,7 @@ import omari.hamza.storyview.callback.OnStoryChangedCallback;
 import omari.hamza.storyview.callback.StoryClickListeners;
 import omari.hamza.storyview.model.MyStory;
 
-public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class OthersStatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final Context context;
     private final ArrayList<UserStatus> userStatuses;
@@ -48,7 +48,7 @@ public class StatusAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private User user;
     private StoryView.Builder storyBuilder;
 
-    public StatusAdapter(Context context, ArrayList<UserStatus> userStatuses) {
+    public OthersStatusAdapter(Context context, ArrayList<UserStatus> userStatuses) {
         this.context = context;
         this.userStatuses = userStatuses;
         appDatabase= DatabaseClient.getInstance(context).getAppDatabase();

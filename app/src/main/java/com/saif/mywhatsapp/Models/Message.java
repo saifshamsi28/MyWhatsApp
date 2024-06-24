@@ -51,6 +51,4 @@ public class Message {
     public void setFeeling(int feeling) {
         this.feeling = feeling;
     }
-
-
 }
