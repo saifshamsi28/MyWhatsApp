@@ -13,6 +13,7 @@ import com.github.pgreze.reactions.ReactionPopup;
 import com.github.pgreze.reactions.ReactionsConfig;
 import com.github.pgreze.reactions.ReactionsConfigBuilder;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
 import com.saif.mywhatsapp.Models.Message;
 import com.saif.mywhatsapp.R;
 import com.saif.mywhatsapp.databinding.ItemReceiveBinding;
@@ -65,6 +66,113 @@ public class MessagesAdapter extends RecyclerView.Adapter{
         });
         Message message=messages.get(position);
 
+//        if(holder.getClass()==SentViewHolder.class){
+//            SentViewHolder viewHolder = (SentViewHolder) holder;
+//            viewHolder.sendBinding.message.setText(message.getMessage());
+//            Date date = new Date(message.getTimeStamp());
+//            // to format time (12-hour format with AM/PM)
+//            SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+//            //to Format the date
+//            String formattedTime = timeFormat.format(date);
+//            // Setting the formatted timestamp(in 12hours AM/PM) to the timestamp-TextView
+//            viewHolder.sendBinding.timestamp.setText(formattedTime);
+//            viewHolder.sendBinding.layoutChatSendContainer.post(() -> {
+//                // combined width of message and timestamp
+//                int messageWidth = viewHolder.sendBinding.message.getMeasuredWidth() + viewHolder.sendBinding.message.getPaddingLeft() + viewHolder.sendBinding.message.getPaddingRight();
+//                int timestampWidth = viewHolder.sendBinding.timestamp.getMeasuredWidth() + viewHolder.sendBinding.timestamp.getPaddingLeft() + viewHolder.sendBinding.timestamp.getPaddingRight();
+//                int combinedWidth = messageWidth + timestampWidth;
+//
+//                // Calculate the available width (excluding padding/margin if necessary)
+//                int maxWidth = viewHolder.sendBinding.message.getMaxWidth();
+//                // Adjust orientation based on the combined width
+//                if (combinedWidth <= maxWidth) {
+//                    viewHolder.sendBinding.layoutChatSendContainer.setOrientation(LinearLayout.HORIZONTAL);
+//                } else {
+////                viewHolder.sendBinding.message.setPaddingRelative(24, 16,16,8);
+//                    viewHolder.sendBinding.layoutChatSendContainer.setOrientation(LinearLayout.VERTICAL);
+//                }
+//            });
+//
+//            // Format the date for the header(for every new day)
+//            SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
+//            String messageDay = sdf.format(date); //date of the current message
+//
+//            if (position == 0) {
+//                // Showing the date for the first message
+//                viewHolder.sendBinding.messageDate.setVisibility(View.VISIBLE);
+//                viewHolder.sendBinding.messageDate.setText(messageDay);
+//            } else {
+//                Message previousMessage = messages.get(position - 1);//to check whether the current and previous
+//                                                                    // message sent on same day or different day
+//                String previousMessageDay = sdf.format(new Date(previousMessage.getTimeStamp())); //previous message date
+//                if (!messageDay.equals(previousMessageDay)) {
+//                    // Show the date if current message date is different from the previous message's date
+//                    viewHolder.sendBinding.messageDate.setVisibility(View.VISIBLE);
+//                    viewHolder.sendBinding.messageDate.setText(messageDay);
+//                } else {
+//                    // Hide the date if it's the same as the previous message's date(only show the date once per day)
+//                    viewHolder.sendBinding.messageDate.setVisibility(View.GONE);
+//                }
+//            }
+//        }else {
+//            ReceiverViewHolder viewHolder=(ReceiverViewHolder) holder;
+//            viewHolder.receiveBinding.message.setText(message.getMessage());
+//
+//            Date date = new Date(message.getTimeStamp());
+//
+//            // to format time (12-hour format with AM/PM)
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+//
+//            // Format the date
+//            String formattedDate = dateFormat.format(date);
+//
+//            // Set the formatted time to the timestamp-TextView
+//            viewHolder.receiveBinding.timestamp.setText(formattedDate);
+//            viewHolder.receiveBinding.layoutChatReceiveContainer.getViewTreeObserver().addOnGlobalLayoutListener(
+//                    new ViewTreeObserver.OnGlobalLayoutListener() {
+//                        @Override
+//                        public void onGlobalLayout() {
+//                            int messageWidth = viewHolder.receiveBinding.message.getWidth() + viewHolder.receiveBinding.message.getPaddingLeft() + viewHolder.receiveBinding.message.getPaddingRight();
+//                            int timestampWidth = viewHolder.receiveBinding.timestamp.getWidth() + viewHolder.receiveBinding.timestamp.getPaddingLeft() + viewHolder.receiveBinding.timestamp.getPaddingRight();
+//                            int combinedWidth = messageWidth + timestampWidth;
+//
+//                            // Calculate the available width (excluding padding/margin if necessary)
+//                            int maxWidth = viewHolder.receiveBinding.message.getMaxWidth();
+//
+//                            // Adjust orientation based on the combined width
+//                            if (combinedWidth <= maxWidth) {
+//                                viewHolder.receiveBinding.layoutChatReceiveContainer.setOrientation(LinearLayout.HORIZONTAL);
+//                            } else {
+//                                viewHolder.receiveBinding.layoutChatReceiveContainer.setOrientation(LinearLayout.VERTICAL);
+//                            }
+//
+//                            // Remove the listener to avoid repeated calls
+//                            viewHolder.receiveBinding.layoutChatReceiveContainer.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+//                        }
+//                    });
+//
+//            //to format the date for message date header (for every new day)
+//            SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
+//            String messageDay = sdf.format(date);
+//
+//            if (position == 0) {
+//                // Show the date for the first message
+//                viewHolder.receiveBinding.messageDate.setVisibility(View.VISIBLE);
+//                viewHolder.receiveBinding.messageDate.setText(messageDay);
+//            } else {
+//                //to check whether the current and previous message sent on same day or different day
+//                Message previousMessage = messages.get(position - 1);
+//                String previousMessageDay = sdf.format(new Date(previousMessage.getTimeStamp()));
+//                if (!messageDay.equals(previousMessageDay)) {
+//                    // Show the date if current message's date is different from the previous message's date
+//                    viewHolder.receiveBinding.messageDate.setVisibility(View.VISIBLE);
+//                    viewHolder.receiveBinding.messageDate.setText(messageDay);
+//                } else {
+//                    // Hide the date if it's the same as the previous message's date
+//                    viewHolder.receiveBinding.messageDate.setVisibility(View.GONE);
+//                }
+//            }
+//        }
         if(holder.getClass()==SentViewHolder.class){
             SentViewHolder viewHolder = (SentViewHolder) holder;
             viewHolder.sendBinding.message.setText(message.getMessage());
@@ -75,58 +183,58 @@ public class MessagesAdapter extends RecyclerView.Adapter{
             String formattedTime = timeFormat.format(date);
             // Setting the formatted timestamp(in 12hours AM/PM) to the timestamp-TextView
             viewHolder.sendBinding.timestamp.setText(formattedTime);
+
+            // Set the message status
+            switch (message.getStatus()) {
+                case Message.STATUS_SENT:
+                    viewHolder.sendBinding.statusIcon.setImageResource(R.drawable.sent_tick);
+                    break;
+                case Message.STATUS_DELIVERED:
+                    viewHolder.sendBinding.statusIcon.setImageResource(R.drawable.delivered_tick);
+                    break;
+                case Message.STATUS_READ:
+                    viewHolder.sendBinding.statusIcon.setImageResource(R.drawable.seen_tick);
+                    break;
+            }
+            // Adjust layout
             viewHolder.sendBinding.layoutChatSendContainer.post(() -> {
-                // combined width of message and timestamp
                 int messageWidth = viewHolder.sendBinding.message.getMeasuredWidth() + viewHolder.sendBinding.message.getPaddingLeft() + viewHolder.sendBinding.message.getPaddingRight();
                 int timestampWidth = viewHolder.sendBinding.timestamp.getMeasuredWidth() + viewHolder.sendBinding.timestamp.getPaddingLeft() + viewHolder.sendBinding.timestamp.getPaddingRight();
                 int combinedWidth = messageWidth + timestampWidth;
 
-                // Calculate the available width (excluding padding/margin if necessary)
                 int maxWidth = viewHolder.sendBinding.message.getMaxWidth();
-                // Adjust orientation based on the combined width
                 if (combinedWidth <= maxWidth) {
                     viewHolder.sendBinding.layoutChatSendContainer.setOrientation(LinearLayout.HORIZONTAL);
                 } else {
-//                viewHolder.sendBinding.message.setPaddingRelative(24, 16,16,8);
                     viewHolder.sendBinding.layoutChatSendContainer.setOrientation(LinearLayout.VERTICAL);
                 }
             });
 
-            // Format the date for the header(for every new day)
             SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
-            String messageDay = sdf.format(date); //date of the current message
+            String messageDay = sdf.format(date);
 
             if (position == 0) {
-                // Showing the date for the first message
                 viewHolder.sendBinding.messageDate.setVisibility(View.VISIBLE);
                 viewHolder.sendBinding.messageDate.setText(messageDay);
             } else {
-                Message previousMessage = messages.get(position - 1);//to check whether the current and previous
-                                                                    // message sent on same day or different day
-                String previousMessageDay = sdf.format(new Date(previousMessage.getTimeStamp())); //previous message date
+                Message previousMessage = messages.get(position - 1);
+                String previousMessageDay = sdf.format(new Date(previousMessage.getTimeStamp()));
                 if (!messageDay.equals(previousMessageDay)) {
-                    // Show the date if current message date is different from the previous message's date
                     viewHolder.sendBinding.messageDate.setVisibility(View.VISIBLE);
                     viewHolder.sendBinding.messageDate.setText(messageDay);
                 } else {
-                    // Hide the date if it's the same as the previous message's date(only show the date once per day)
                     viewHolder.sendBinding.messageDate.setVisibility(View.GONE);
                 }
             }
-        }else {
-            ReceiverViewHolder viewHolder=(ReceiverViewHolder) holder;
+        } else {
+            ReceiverViewHolder viewHolder = (ReceiverViewHolder) holder;
             viewHolder.receiveBinding.message.setText(message.getMessage());
 
             Date date = new Date(message.getTimeStamp());
-
-            // to format time (12-hour format with AM/PM)
             SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-
-            // Format the date
             String formattedDate = dateFormat.format(date);
-
-            // Set the formatted time to the timestamp-TextView
             viewHolder.receiveBinding.timestamp.setText(formattedDate);
+
             viewHolder.receiveBinding.layoutChatReceiveContainer.getViewTreeObserver().addOnGlobalLayoutListener(
                     new ViewTreeObserver.OnGlobalLayoutListener() {
                         @Override
@@ -135,45 +243,38 @@ public class MessagesAdapter extends RecyclerView.Adapter{
                             int timestampWidth = viewHolder.receiveBinding.timestamp.getWidth() + viewHolder.receiveBinding.timestamp.getPaddingLeft() + viewHolder.receiveBinding.timestamp.getPaddingRight();
                             int combinedWidth = messageWidth + timestampWidth;
 
-                            // Calculate the available width (excluding padding/margin if necessary)
                             int maxWidth = viewHolder.receiveBinding.message.getMaxWidth();
 
-                            // Adjust orientation based on the combined width
                             if (combinedWidth <= maxWidth) {
                                 viewHolder.receiveBinding.layoutChatReceiveContainer.setOrientation(LinearLayout.HORIZONTAL);
                             } else {
                                 viewHolder.receiveBinding.layoutChatReceiveContainer.setOrientation(LinearLayout.VERTICAL);
                             }
 
-                            // Remove the listener to avoid repeated calls
                             viewHolder.receiveBinding.layoutChatReceiveContainer.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                         }
                     });
 
-            //to format the date for message date header (for every new day)
             SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
             String messageDay = sdf.format(date);
 
             if (position == 0) {
-                // Show the date for the first message
                 viewHolder.receiveBinding.messageDate.setVisibility(View.VISIBLE);
                 viewHolder.receiveBinding.messageDate.setText(messageDay);
             } else {
-                //to check whether the current and previous message sent on same day or different day
                 Message previousMessage = messages.get(position - 1);
                 String previousMessageDay = sdf.format(new Date(previousMessage.getTimeStamp()));
                 if (!messageDay.equals(previousMessageDay)) {
-                    // Show the date if current message's date is different from the previous message's date
                     viewHolder.receiveBinding.messageDate.setVisibility(View.VISIBLE);
                     viewHolder.receiveBinding.messageDate.setText(messageDay);
                 } else {
-                    // Hide the date if it's the same as the previous message's date
                     viewHolder.receiveBinding.messageDate.setVisibility(View.GONE);
                 }
             }
         }
 
     }
+
     @Override
     public int getItemViewType(int position) {
         Message message= messages.get(position);

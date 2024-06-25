@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.widget.RemoteViews;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,7 +19,6 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -50,7 +50,7 @@ public class FCMNotificationService extends FirebaseMessagingService {
         super.onCreate();
         createNotificationChannel();
     }
-
+//9430820499   7352252816
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         if (remoteMessage.getData().size() > 0) {
@@ -77,13 +77,25 @@ public class FCMNotificationService extends FirebaseMessagingService {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
+        // Create the custom notification layouts
+        RemoteViews notificationLayout = new RemoteViews(getPackageName(), R.layout.notification_small);
+        RemoteViews notificationLayoutExpanded = new RemoteViews(getPackageName(), R.layout.notification_large);
+
+        // Set the title and message in the custom layouts
+        notificationLayout.setTextViewText(R.id.notification_title, title);
+        notificationLayoutExpanded.setTextViewText(R.id.notification_title, title);
+        notificationLayoutExpanded.setTextViewText(R.id.notification_body, message);
+
+        // Build the notification with the custom layouts
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentText(message)
-                .setSubText(title)
+                .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                .setCustomBigContentView(notificationLayoutExpanded)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
 
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(this)
@@ -94,14 +106,14 @@ public class FCMNotificationService extends FirebaseMessagingService {
                         @Override
                         public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                             builder.setLargeIcon(resource);
-                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(FCMNotificationService.this);
-                            notificationManager.notify(1, builder.build());
+                            notificationManager.notify(NOTIFICATION_ID, builder.build());
                         }
+
                         @Override
                         public void onLoadFailed(@Nullable Drawable errorDrawable) {
                             super.onLoadFailed(errorDrawable);
                             builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.avatar));
-                             // Fallback to show notification with default avatar
+                            notificationManager.notify(NOTIFICATION_ID, builder.build()); // Show notification with default avatar
                         }
 
                         @Override
@@ -110,7 +122,7 @@ public class FCMNotificationService extends FirebaseMessagingService {
                         }
                     });
         } else {
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+            builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.avatar)); // Set default avatar if imageUrl is null or empty
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
@@ -121,7 +133,7 @@ public class FCMNotificationService extends FirebaseMessagingService {
                 // for ActivityCompat#requestPermissions for more details.
                 return;
             }
-            notificationManager.notify(NOTIFICATION_ID, builder.build());
+            notificationManager.notify(NOTIFICATION_ID, builder.build()); // Display the notification with the default avatar
         }
     }
 
