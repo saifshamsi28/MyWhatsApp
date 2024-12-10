@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="16dp"
-    android:background="?selectableItemBackground">
+    android:background="?selectableItemBackground"
+    android:padding="16dp">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/contact_img"
@@ -31,6 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="8dp"
+        android:maxLines="1"
         android:text="Janishar"
         android:textColor="@color/black"
         android:textSize="18dp"
@@ -42,12 +43,12 @@
     <TextView
         android:id="@+id/recent_message"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="20dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="8dp"
         android:text="Tap to check"
-        android:textSize="14dp"
         android:textColor="#676767"
+        android:textSize="14dp"
         app:layout_constraintBottom_toBottomOf="@+id/contact_img"
         app:layout_constraintEnd_toStartOf="@+id/message_time"
         app:layout_constraintStart_toEndOf="@+id/contact_img"
@@ -59,19 +60,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:text="06:00 pm"
-        android:textSize="12dp"
         android:textColor="#676767"
+        android:textSize="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-<!--    <View-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="1dp"-->
-<!--        android:background="#AAE2DD"-->
-<!--        android:layout_marginTop="16dp"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.5"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@+id/recent_message" />-->
 </androidx.constraintlayout.widget.ConstraintLayout>

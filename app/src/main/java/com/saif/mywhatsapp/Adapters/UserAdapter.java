@@ -1,16 +1,30 @@
 package com.saif.mywhatsapp.Adapters;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.util.Log;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
@@ -19,6 +33,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.saif.mywhatsapp.Activities.ChatsActivity;
+import com.saif.mywhatsapp.Fragments.FullScreenImageFragment;
 import com.saif.mywhatsapp.Models.User;
 import com.saif.mywhatsapp.R;
 import com.saif.mywhatsapp.databinding.RowConversationBinding;
@@ -61,6 +76,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         }
 
         if (isChat) {
+//            Toast.makeText(context, "is chat true", Toast.LENGTH_SHORT).show();
             if (!user.getUid().equals(FirebaseAuth.getInstance().getUid())) {
                 if (user.getStatus().equals("online")) {
                     holder.conversationBinding.status.setVisibility(View.VISIBLE);
@@ -74,10 +90,10 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             holder.conversationBinding.status.setVisibility(View.GONE);
         }
 
-        ImageView imageView = Glide.with(context)
+         Glide.with(context)
                 .load(user.getProfileImage())
                 .placeholder(R.drawable.avatar)
-                .into(holder.conversationBinding.contactImg).getView();
+                .into(holder.conversationBinding.contactImg);
         String senderId = FirebaseAuth.getInstance().getUid();
         String senderRoom = senderId + user.getUid();
         setThemeForHomeScreen(holder.conversationBinding.contactName,
@@ -113,6 +129,13 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
                     }
                 });
 
+        holder.conversationBinding.contactImg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showMiniProfile(user, v);
+            }
+        });
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -127,6 +150,120 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         });
     }
 
+//    private void showMiniProfile(User user, View clickedView) {
+//        Dialog dialog = new Dialog(context);
+//        dialog.setContentView(R.layout.mini_profile_layout);
+//
+//        // Get the position of the clicked view
+//        int[] location = new int[2];
+//        clickedView.getLocationOnScreen(location);
+//        float clickedX = location[0];
+//        float clickedY = location[1];
+//
+//        // Set dialog animations
+//        dialog.getWindow().setWindowAnimations(R.style.DialogAnimation);
+//
+//        // Get the dialog's root layout
+//        View dialogRoot = dialog.findViewById(android.R.id.content);
+//
+//        // Measure and layout the dialog content view
+//        dialogRoot.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+//        int dialogWidth = dialogRoot.getMeasuredWidth();
+//        int dialogHeight = dialogRoot.getMeasuredHeight();
+//
+//        // Calculate the pivot points relative to the dialog's content view
+//
+//        // Set pivot points
+//        dialogRoot.setPivotX(clickedX);
+//        dialogRoot.setPivotY(clickedY);
+//
+//        // Create the scale and translation animations
+//        ObjectAnimator scaleX = ObjectAnimator.ofFloat(dialogRoot, View.SCALE_X, 0.5f, 1.0f);
+//        ObjectAnimator scaleY = ObjectAnimator.ofFloat(dialogRoot, View.SCALE_Y, 0.5f, 1.0f);
+//        ObjectAnimator alpha = ObjectAnimator.ofFloat(dialogRoot, View.ALPHA, 0.0f, 1.0f);
+//
+//        AnimatorSet animatorSet = new AnimatorSet();
+//        animatorSet.playTogether(scaleX, scaleY, alpha);
+//        animatorSet.setDuration(300);
+//        animatorSet.start();
+//
+//        ImageView miniImageView = dialog.findViewById(R.id.mini_profile_img);
+//        TextView name = dialog.findViewById(R.id.mini_profile_name);
+//
+//        // Load mini profile data
+//        Glide.with(context)
+//                .load(user.getProfileImage())
+//                .placeholder(R.drawable.avatar)
+//                .into(miniImageView);
+//        name.setText(user.getName());
+//
+//        // Click listener for mini profile image view
+//        miniImageView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                // Switch to full profile fragment
+//                dialog.dismiss();
+//
+//                // Make the fragment container visible
+//                View fragmentContainer = ((Activity) context).findViewById(R.id.fragment_container);
+//                fragmentContainer.setVisibility(View.VISIBLE);
+//
+//                FullScreenProfileFragment fullScreenProfileFragment = FullScreenProfileFragment.newInstance(user.getProfileImage(), user.getName());
+//                fullScreenProfileFragment.show(((AppCompatActivity) context).getSupportFragmentManager(), "FullScreenProfileFragment");
+//
+//                // Set a back stack listener to hide the fragment container when the fragment is popped
+////                fragmentManager.addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+////                    @Override
+////                    public void onBackStackChanged() {
+////                        if (fragmentManager.getBackStackEntryCount() == 0) {
+////                            fragmentContainer.setVisibility(View.GONE);
+////                            fragmentManager.removeOnBackStackChangedListener(this);
+////                        }
+////                    }
+////                });
+//            }
+//        });
+//
+//        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+//        dialog.show();
+//    }
+
+    private void showMiniProfile(User user, View clickedView) {
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.mini_profile_layout);
+
+        ImageView miniImageView = dialog.findViewById(R.id.mini_profile_img);
+        TextView name = dialog.findViewById(R.id.mini_profile_name);
+
+        // Load mini profile data
+        Glide.with(context)
+                .load(user.getProfileImage())
+                .placeholder(R.drawable.avatar)
+                .into(miniImageView);
+        name.setText(user.getName());
+
+        // Click listener for mini profile image view
+        miniImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+
+                FragmentManager fragmentManager = ((AppCompatActivity) context).getSupportFragmentManager();
+                FullScreenImageFragment fullScreenImageFragment = FullScreenImageFragment.newInstance(context,user.getProfileImage(), user.getName());
+
+                fragmentManager.beginTransaction()
+                        .add(android.R.id.content, fullScreenImageFragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
+        });
+
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.show();
+    }
+
+
+    // Insi
     private void updateLastMessage(UserViewHolder holder, String senderRoom) {
         FirebaseDatabase.getInstance().getReference().child("chats")
                 .child(senderRoom)
@@ -134,13 +271,15 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()) {
-                            String lastMessage = snapshot.child("lastMessage").getValue(String.class);
-                            long lastMessageTime = snapshot.child("lastMessageTime").getValue(long.class);
-                            Date date = new Date(lastMessageTime);
-                            SimpleDateFormat formatter = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-                            String formattedTime = formatter.format(date);
-                            holder.conversationBinding.recentMessage.setText(lastMessage);
-                            holder.conversationBinding.messageTime.setText(formattedTime);
+                            if(snapshot.child("lastMessage").exists() && snapshot.child("lastMessageTime").exists()){
+                                String lastMessage = snapshot.child("lastMessage").getValue(String.class);
+                                long lastMessageTime = snapshot.child("lastMessageTime").getValue(long.class);
+                                Date date = new Date(lastMessageTime);
+                                SimpleDateFormat formatter = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+                                String formattedTime = formatter.format(date);
+                                holder.conversationBinding.recentMessage.setText(lastMessage);
+                                holder.conversationBinding.messageTime.setText(formattedTime);
+                            }
                         } else {
                             holder.conversationBinding.recentMessage.setText("Tap to check");
                         }

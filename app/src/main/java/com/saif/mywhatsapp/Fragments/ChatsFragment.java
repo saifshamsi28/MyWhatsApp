@@ -16,24 +16,21 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.saif.mywhatsapp.Adapters.UserAdapter;
-import com.saif.mywhatsapp.AppDatabase;
-import com.saif.mywhatsapp.DatabaseClient;
+import com.saif.mywhatsapp.Database.AppDatabase;
+import com.saif.mywhatsapp.Database.DatabaseClient;
 import com.saif.mywhatsapp.Models.User;
 import com.saif.mywhatsapp.R;
 import com.saif.mywhatsapp.databinding.FragmentChatsBinding;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -73,6 +70,7 @@ public class ChatsFragment extends Fragment {
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         users = new ArrayList<>();
+//        appDatabase=DatabaseClient.getInstance().getAppDatabase();
         userAdapter = new UserAdapter(requireContext(), users,true);
 
         fragmentChatsBinding.chatRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -120,62 +118,12 @@ public class ChatsFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(getContext(), "Error fetching user from Firebase", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "chatFragment Error fetching user from Firebase", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Load other users from Room or Firebase
         loadUsers();
-        // added this because mistakenly deleted the firebase database user but users still exist in the local database
-//        updateLocalUsersToFirebaseDatabase();
     }
-
-//    private void updateLocalUsersToFirebaseDatabase() {
-//        executor.execute(() -> {
-//            List<User> userList = appDatabase.userDao().getAllUsers(); // Fetch all users from local database
-//
-//            Log.e("users", "userList size: " + userList.size() + " users size: " + users.size());
-//            if (!userList.isEmpty()) {
-//                users.clear();
-//                for (User user : userList) {
-//                    database.getReference().child("Users").child(user.getUid())
-//                            .addListenerForSingleValueEvent(new ValueEventListener() {
-//                                @Override
-//                                public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                                    if (!snapshot.exists()) {
-//                                        database.getReference().child("Users").child(user.getUid())
-//                                                .setValue(user).addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                                    @Override
-//                                                    public void onSuccess(@NonNull Void unused) {
-//                                                        Log.e("Firebase", "User: " + user.getName() + " added to firebase");
-//                                                        mainHandler.post(() -> {
-//                                                            if (!users.contains(user)) {
-//                                                                users.add(user);
-//                                                                userAdapter.notifyDataSetChanged();
-//                                                            }
-//                                                        });
-//                                                    }
-//                                                }).addOnFailureListener(new OnFailureListener() {
-//                                                    @Override
-//                                                    public void onFailure(@NonNull Exception e) {
-//                                                        Log.e("Firebase fail", "User adding failed for user: " + user.getUid());
-//                                                    }
-//                                                });
-//                                    }
-//                                }
-//
-//                                @Override
-//                                public void onCancelled(@NonNull DatabaseError error) {
-//                                    Log.e("Firebase Error", "Failed to check if user exists: " + user.getUid());
-//                                }
-//                            });
-//                }
-//            } else {
-//                Log.e("Local Database", "No users found in the local database");
-//            }
-//        });
-//    }
-
 
     private void initializeDatabase() {
         // Initialize the AppDatabase using DatabaseClient
@@ -189,7 +137,7 @@ public class ChatsFragment extends Fragment {
     }
 
     private void loadUsers() {
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String currentUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         executor.execute(() -> {
             List<User> userList = appDatabase.userDao().getAllUsers(); // Fetch all users from local database
             mainHandler.post(() -> {
@@ -228,7 +176,10 @@ public class ChatsFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(getContext(), "Error fetching users from Firebase", Toast.LENGTH_SHORT).show();
+                Log.e("loadUsers chatFragment", "Firebase error: " + error.getMessage());
+                Log.e("loadUsers chatFragment", "Firebase error details: " + error.getDetails());
+                Log.e("loadUsers chatFragment", "Firebase error code: " + error.getCode());
+                Toast.makeText(getContext(), "Error fetching users from Firebase: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

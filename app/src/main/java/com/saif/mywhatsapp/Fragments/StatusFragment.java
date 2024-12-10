@@ -4,14 +4,16 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -35,12 +37,13 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.saif.mywhatsapp.Activities.MyStatusViewActivity;
 import com.saif.mywhatsapp.Adapters.OthersStatusAdapter;
-import com.saif.mywhatsapp.AppDatabase;
-import com.saif.mywhatsapp.DatabaseClient;
+import com.saif.mywhatsapp.Database.AppDatabase;
+import com.saif.mywhatsapp.Database.DatabaseClient;
 import com.saif.mywhatsapp.Models.Status;
 import com.saif.mywhatsapp.Models.User;
 import com.saif.mywhatsapp.Models.UserStatus;
 import com.saif.mywhatsapp.R;
+import com.saif.mywhatsapp.StatusUpdateCallback;
 import com.saif.mywhatsapp.databinding.FragmentStatusBinding;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,7 +58,7 @@ import java.util.concurrent.TimeUnit;
 
 import omari.hamza.storyview.StoryView;
 
-public class StatusFragment extends Fragment {
+public class StatusFragment extends Fragment implements StatusUpdateCallback {
     private FragmentStatusBinding fragmentStatusBinding;
     private FirebaseAuth auth;
     private FirebaseDatabase database;
@@ -131,7 +134,7 @@ public class StatusFragment extends Fragment {
 
         otherStatusRecyclerView = fragmentStatusBinding.othersStatusRecyclerview;
         otherStatusRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        othersStatusAdapter = new OthersStatusAdapter(getContext(), userStatuses);
+        othersStatusAdapter = new OthersStatusAdapter(getContext(), userStatuses,this);
         otherStatusRecyclerView.setAdapter(othersStatusAdapter);
 
         appDatabase = DatabaseClient.getInstance(getContext()).getAppDatabase();
@@ -141,6 +144,7 @@ public class StatusFragment extends Fragment {
                 if (isUserOwnStatusUploaded) {
                     Intent intent=new Intent(context, MyStatusViewActivity.class);
                     intent.putExtra("myStatuses",myUserStatus);
+                    MyStatusViewActivity.setStatusUpdateCallback(this);
                     startActivity(intent);
                 } else {
                     Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -348,32 +352,20 @@ public class StatusFragment extends Fragment {
             fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.invalidate();
             fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.requestLayout();
             updateStatusTime(myUserStatus.getStatuses().get(myUserStatus.getStatuses().size()-1).getTimeStamps());
-//            String lastStatusTime = formatStatusTime(new Date(lastStatus.getTimeStamps()))[0];
-//            String lastStatusDate = formatStatusTime(new Date(lastStatus.getTimeStamps()))[1];
-//            String currentDate = formatStatusTime(new Date())[1];
-//            if (currentDate.equals(lastStatusDate)) {
-//                if (lastStatusTime.startsWith("0")) {
-//                    lastStatusTime = lastStatusTime.substring(1);
-//                }
-//            } else {
-//                lastStatusTime = "Yesterday";
-//            }
-//            fragmentStatusBinding.userOwnStatusItems.statusTime.setText(lastStatusTime);
             refreshUserLayout();
         } else {
             // If there are no statuses, load the user's profile image
-            if (currentUser != null && currentUser.getProfileImage() != null) {
-                Glide.with(context)
+            if (context!=null && currentUser != null && currentUser.getProfileImage() != null) {
+                Glide.with(this)
                         .asBitmap()
                         .load(currentUser.getProfileImage())
                         .placeholder(R.drawable.avatar)
                         .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
             } else {
-                Glide.with(context)
+                Glide.with(this)
                         .load(R.drawable.avatar)
                         .into(fragmentStatusBinding.userOwnStatusItems.myStatusImage);
             }
-
             // Show the add button and hide the circular status view
             fragmentStatusBinding.userOwnStatusItems.add.setVisibility(View.VISIBLE);
             fragmentStatusBinding.userOwnStatusItems.myCircularStatusView.setVisibility(View.GONE);
@@ -391,7 +383,7 @@ public class StatusFragment extends Fragment {
         statusUpdateRunnable = new Runnable() {
             @Override
             public void run() {
-                if (myUserStatus.getStatuses().size() != 0) {
+                if (!myUserStatus.getStatuses().isEmpty()) {
                     String timeAgo = getTimeAgo(statusTime + "");
                     fragmentStatusBinding.userOwnStatusItems.statusTime.setText(timeAgo);
 
@@ -416,7 +408,6 @@ public class StatusFragment extends Fragment {
                 }
             }
         };
-
         handler.post(statusUpdateRunnable);
     }
 
@@ -434,29 +425,65 @@ public class StatusFragment extends Fragment {
             String currentDate=formatStatusTime(new Date())[1];
             String statusDate=formatStatusTime(new Date(statusTime))[1];
             if(currentDate.equals(statusDate)){
-                time="Today, "+formatStatusTime(new Date(statusTime))[0];
+                return "Today, "+formatStatusTime(new Date(statusTime))[0];
             }else {
-                time="Yesterday, "+formatStatusTime(new Date(statusTime))[0];
+                return "Yesterday, "+formatStatusTime(new Date(statusTime))[0];
             }
-//            SimpleDateFormat sdf = new SimpleDateFormat("h:mm a", Locale.getDefault());
-            return time;
         }
     }
 
+    private static final long STATUS_EXPIRY_DURATION = 3* 60 * 1000; // 24 hours in milliseconds
+
     private void removeExpiredStatuses() {
         long currentTime = System.currentTimeMillis();
+        Log.e("removeExpireStatusesMethod","method calling at "+currentTime);
         for (UserStatus userStatus : userStatuses) {
             ArrayList<Status> validStatuses = new ArrayList<>();
-            for (Status status : userStatus.getStatuses()) {
-                if (currentTime - status.getTimeStamps() <= 2* 60 * 1000) { // Status valid for 24 hours
+            ArrayList<Status> expiredStatuses = new ArrayList<>();
 
+            for (Status status : userStatus.getStatuses()) {
+                if (currentTime - status.getTimeStamps() <= STATUS_EXPIRY_DURATION) {
                     validStatuses.add(status);
+                } else {
+                    expiredStatuses.add(status);
                 }
+            }
+
+            for (Status status : expiredStatuses) {
+                executor.execute(() -> {
+                    // Remove from local database
+                    appDatabase.statusDao().deleteStatusByTimeStamp(status.getTimeStamps());
+                    Log.e("expired status","removed status from local database: "+status.getTimeStamps());
+
+                    // Remove from Firebase
+                    database.getReference().child("status")
+                            .child(userStatus.getUserId())
+                            .child("statuses")
+                            .orderByChild("timeStamps")
+                            .equalTo(status.getTimeStamps())
+                            .addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    if (snapshot.exists()) {
+                                        for (DataSnapshot statusSnapshot : snapshot.getChildren()) {
+                                            statusSnapshot.getRef().removeValue();
+                                            Log.e("expired status","removed status from firebase database: "+status.getTimeStamps());
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+
+                                }
+                            });
+                });
             }
             userStatus.setStatuses(validStatuses);
         }
         othersStatusAdapter.notifyDataSetChanged();
     }
+
 
     @Override
     public void onDestroy() {
@@ -480,17 +507,30 @@ public class StatusFragment extends Fragment {
             case Configuration.UI_MODE_NIGHT_YES:
                 color = ContextCompat.getColor(context, R.color.primaryTextColor); // White for dark mode
                 color2 = ContextCompat.getColor(context, R.color.secondaryTextColor); // White for dark mode
+                fragmentStatusBinding.addNewStatus.setSupportBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(),R.color.white)));
                 break;
             case Configuration.UI_MODE_NIGHT_NO:
             case Configuration.UI_MODE_NIGHT_UNDEFINED:
             default:
                 color = ContextCompat.getColor(context, R.color.primaryTextColor); // Black for light mode
                 color2 = ContextCompat.getColor(context, R.color.secondaryTextColor); // Black for light mode
+                fragmentStatusBinding.addNewStatus.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.GreenishBlue));
+                fragmentStatusBinding.addNewStatus.setImageTintList(ContextCompat.getColorStateList(getContext(),R.color.white));
                 break;
         }
         fragmentStatusBinding.userOwnStatusItems.statusHeader.setTextColor(color);
         fragmentStatusBinding.userOwnStatusItems.myStatus.setTextColor(color);
         fragmentStatusBinding.userOwnStatusItems.statusTime.setTextColor(color2);
         fragmentStatusBinding.userOwnStatusItems.recent.setTextColor(color2);
+        fragmentStatusBinding.addNewStatus.setBackgroundColor(Color.WHITE);
+    }
+
+    @Override
+    public void onStatusUpdated(Status status1) {
+        Log.e("call from Mystatus Adapter","removed status uploaded at "+status1.getTimeStamps());
+        if (othersStatusAdapter != null) {
+            // Notify the adapter about the data change
+            othersStatusAdapter.notifyDataSetChanged();
+        }
     }
 }

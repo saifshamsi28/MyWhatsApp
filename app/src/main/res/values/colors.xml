@@ -16,6 +16,15 @@
     <color name="Teal">#3B5656</color>
     <color name="dark">#C1111111</color>
     <color name="greenDark">#0CDA15</color>
+    <color name="receive_message">#398E9291</color>
+    <color name="receive_message_color">#40898B8A</color>
+    <color name="night_color_background">#40898B8A</color>
+    <color name="send_message">#8338827B</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="light_blue_900">#FF01579B</color>
+    <color name="light_blue_A200">#FF40C4FF</color>
+    <color name="light_blue_A400">#FF00B0FF</color>
+    <color name="black_overlay">#66000000</color>
 
 
 </resources>

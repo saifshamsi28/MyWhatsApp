@@ -1,12 +1,15 @@
 package com.saif.mywhatsapp.Activities;
 
+import android.Manifest;
+import android.app.Dialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
-import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,29 +18,24 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingService;
 import com.saif.mywhatsapp.Adapters.UserAdapter;
 import com.saif.mywhatsapp.Adapters.ViewPagerAdapter;
-import com.saif.mywhatsapp.AppDatabase;
-import com.saif.mywhatsapp.DatabaseClient;
+import com.saif.mywhatsapp.Database.AppDatabase;
+import com.saif.mywhatsapp.Database.DatabaseClient;
 import com.saif.mywhatsapp.Fragments.ChatsFragment;
 import com.saif.mywhatsapp.Models.User;
 import com.saif.mywhatsapp.R;
@@ -46,10 +44,12 @@ import com.saif.mywhatsapp.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import androidx.lifecycle.ProcessLifecycleOwner;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -72,12 +72,6 @@ public class MainActivity extends AppCompatActivity {
         mainBinding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(mainBinding.getRoot());
 
-        //to check online/offline status of user
-//        UserStatusObserver appLifecycleObserver = new UserStatusObserver(this);
-//        ProcessLifecycleOwner.get().getLifecycle().addObserver(appLifecycleObserver);
-
-         // Set status bar color based on Day or Night Mode
-//            Toast.makeText(this, "user id is null", Toast.LENGTH_SHORT).show();
             if (setThemeForHomeScreen() == 2)
                 getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.GreenishBlue));
             else
@@ -87,9 +81,6 @@ public class MainActivity extends AppCompatActivity {
             auth = FirebaseAuth.getInstance();
             database = FirebaseDatabase.getInstance();
             appDatabase = DatabaseClient.getInstance(this).getAppDatabase();
-            users = new ArrayList<>();
-            userAdapter = new UserAdapter(this, users, false);
-            recyclerView = findViewById(R.id.main_recyclerview);
 
             BottomNavigationView bottomNavigationView;
             viewPager = findViewById(R.id.viewPager);
@@ -98,7 +89,13 @@ public class MainActivity extends AppCompatActivity {
             ViewPagerAdapter adapter = new ViewPagerAdapter(this);
             viewPager.setAdapter(adapter);
 
-            //to check online/offline status of user
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
+            }
+        }
+
+        //to check online/offline status of user
             UserStatusObserver appLifecycleObserver = new UserStatusObserver(this);
             ProcessLifecycleOwner.get().getLifecycle().addObserver(appLifecycleObserver);
 
@@ -152,25 +149,52 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null) {
             setFCMTokenOfUser();
+        } else {
+            // Handle user not authenticated
+            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+        }
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Notification permission Granted", Toast.LENGTH_SHORT).show();
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
+
+            }
+        }
+    }
+
 
     private void setFCMTokenOfUser() {
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
-            if(task.isSuccessful()){
+            if (task.isSuccessful()) {
                 String token = task.getResult();
-                HashMap<String,Object> tokenMap = new HashMap<>();
-                tokenMap.put("fcmToken",token);
-                database.getReference().child("Users")
-                        .child(auth.getUid())
-                        .updateChildren(tokenMap);
+                if (token != null && !token.isEmpty()) {
+                    HashMap<String, Object> tokenMap = new HashMap<>();
+                    tokenMap.put("fcmToken", token);
+                    FirebaseDatabase.getInstance().getReference().child("Users")
+                            .child(FirebaseAuth.getInstance().getUid())
+                            .updateChildren(tokenMap);
+                } else {
+                    Toast.makeText(MainActivity.this, "Failed to get FCM token", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(MainActivity.this, "Failed to retrieve FCM token: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_top, menu);
+        getMenuInflater().inflate(R.menu.menu_main_top, menu);
         MenuItem searchItem = menu.findItem(R.id.search);
         SearchView searchView = (SearchView) searchItem.getActionView();
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -198,9 +222,45 @@ public class MainActivity extends AppCompatActivity {
         if (R.id.setting == item.getItemId()) {
             Toast.makeText(this, "setting clicked", Toast.LENGTH_SHORT).show();
         } else if (R.id.groups == item.getItemId()) {
-            Toast.makeText(this, "Groups clicked", Toast.LENGTH_SHORT).show();
+            Toast toast= Toast.makeText(this, "Groups clicked", Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
+            toast.show();
         } else if (R.id.logout == item.getItemId()) {
-            deleteFCMTokenAndSignOut(auth.getUid());
+
+            Dialog dialog=new Dialog(this);
+            dialog.setContentView(R.layout.logout_confirmation_dialog);
+            TextView accountName=dialog.findViewById(R.id.account_name);
+            CircleImageView accountProfile=dialog.findViewById(R.id.account_profile);
+            accountProfile.setVisibility(View.VISIBLE);
+            Glide.with(this).load(currentUserProfile)
+                    .placeholder(R.drawable.avatar)
+                            .into(accountProfile);
+            accountName.setText(currentUserName);
+
+            dialog.setCanceledOnTouchOutside(true);
+            Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(null);
+
+            dialog.show();
+
+            dialog.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    accountProfile.setVisibility(View.GONE);
+//                    Toast.makeText(MainActivity.this, "Logout cancelled ", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }
+            });
+            dialog.findViewById(R.id.confirm).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(MainActivity.this, "Logging out from "+currentUserName, Toast.LENGTH_SHORT).show();
+                    deleteFCMTokenAndSignOut();
+                    accountProfile.setVisibility(View.GONE);
+                    dialog.dismiss();
+                }
+            });
+
+//            deleteFCMTokenAndSignOut(auth.getUid());
 //            Toast.makeText(this,"Logged out from "+currentUserName,Toast.LENGTH_SHORT).show();
         } else if (R.id.profile == item.getItemId()) {
             Intent intent = new Intent(MainActivity.this, SetUpProfileActivity.class);
@@ -215,10 +275,11 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private void deleteFCMTokenAndSignOut(String uid) {
+    private void deleteFCMTokenAndSignOut() {
         FirebaseMessaging.getInstance().deleteToken().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 auth.signOut();
+                Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this, SignUpLoginActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
@@ -230,6 +291,7 @@ public class MainActivity extends AppCompatActivity {
         int nightModeFlags = this.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         switch (nightModeFlags) {
             case Configuration.UI_MODE_NIGHT_YES:
+//                mainBinding.main.setBackgroundColor(ContextCompat.getColor(this, R.color.night_color_background));
                 return 1;
             case Configuration.UI_MODE_NIGHT_NO:
             case Configuration.UI_MODE_NIGHT_UNDEFINED:
@@ -237,4 +299,5 @@ public class MainActivity extends AppCompatActivity {
                 return 2;
         }
     }
+
 }

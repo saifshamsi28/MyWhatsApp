@@ -5,25 +5,33 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginEnd="8dp">
-    <TextView
-        android:id="@+id/message_date"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/message_date_cardview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:paddingStart="8dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="4dp"
-        android:text="June 10"
-        android:background="@drawable/textbox_outline"
-        android:textColor="#80565454"
         android:visibility="gone"
+        app:cardCornerRadius="8dp"
+        app:cardBackgroundColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/message_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="8dp"
+            android:paddingTop="2dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="2dp"
+            android:text="June 10,2024"
+            android:textColor="@color/black" />
+    </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/card_gchat_message_me"
+        android:id="@+id/cardview_message_me"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="@color/GreenishBlue"
@@ -32,7 +40,7 @@
         app:cardPreventCornerOverlap="false"
         app:cardUseCompatPadding="true"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/message_date">
+        app:layout_constraintTop_toBottomOf="@id/message_date_cardview">
 
         <LinearLayout
             android:id="@+id/layout_chat_send_container"
@@ -93,10 +101,10 @@
         android:translationZ="10dp"
         android:visibility="gone"
         android:layout_marginEnd="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/card_gchat_message_me"
+        app:layout_constraintBottom_toBottomOf="@+id/cardview_message_me"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/card_gchat_message_me"
-        app:layout_constraintTop_toBottomOf="@+id/card_gchat_message_me"
+        app:layout_constraintStart_toStartOf="@+id/cardview_message_me"
+        app:layout_constraintTop_toBottomOf="@+id/cardview_message_me"
         app:layout_constraintVertical_bias="0.35" />
 </androidx.constraintlayout.widget.ConstraintLayout>

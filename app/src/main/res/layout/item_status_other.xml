@@ -59,7 +59,7 @@
         android:id="@+id/others_status_time"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="09:56 pm 13 june 2024"
+        android:text="12:00 am"
         app:layout_constraintEnd_toEndOf="@id/others_status_contact_name"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/others_status_contact_name"

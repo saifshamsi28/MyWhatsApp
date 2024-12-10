@@ -13,6 +13,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.appcheck.FirebaseAppCheck;
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 import com.google.firebase.auth.FirebaseAuth;
 import com.saif.mywhatsapp.R;
 import com.saif.mywhatsapp.databinding.ActivitySignUpLoginBinding;
@@ -28,6 +31,15 @@ public class SignUpLoginActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         signUpLoginBinding =ActivitySignUpLoginBinding.inflate(getLayoutInflater());
         setContentView(signUpLoginBinding.getRoot());
+
+        FirebaseApp.initializeApp(this);
+
+        // Enable Firebase App Check with Play Integrity API
+        FirebaseAppCheck firebaseAppCheck = FirebaseAppCheck.getInstance();
+        firebaseAppCheck.installAppCheckProviderFactory(
+                PlayIntegrityAppCheckProviderFactory.getInstance()
+        );
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
