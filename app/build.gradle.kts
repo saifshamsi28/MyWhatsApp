@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.androidApplication)
     id("com.google.gms.google-services")
@@ -10,6 +11,17 @@ android {
     buildFeatures {
         viewBinding=true
     }
+
+    packaging {
+        resources.excludes.add("META-INF/DEPENDENCIES")
+        resources.excludes.add("META-INF/LICENSE")
+        resources.excludes.add("META-INF/LICENSE.txt")
+        resources.excludes.add("META-INF/license.txt")
+        resources.excludes.add("META-INF/NOTICE")
+        resources.excludes.add("META-INF/NOTICE.txt")
+        resources.excludes.add("META-INF/notice.txt")
+    }
+
 
     defaultConfig {
         applicationId = "com.saif.mywhatsapp"
@@ -42,22 +54,48 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.room.common.jvm)
+    implementation(libs.room.runtime)
+    implementation(libs.lifecycle.process)
+    implementation(libs.firebase.messaging)
+    implementation(libs.cardview)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation ("com.github.mukeshsolanki.android-otpview-pinview:otpview:3.1.0")
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth:23.0.0")
-    implementation("com.google.firebase:firebase-database:21.0.0")
-    implementation("com.google.firebase:firebase-storage:21.0.0")
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
-    implementation ("com.github.bumptech.glide:glide:4.16.0")
-    implementation ("de.hdodenhof:circleimageview:3.1.0")
-    implementation ("com.github.pgreze:android-reactions:1.6")
-    implementation("io.github.amrdeveloper:reactbutton:2.1.0")
-    implementation ("com.github.3llomi:CircularStatusView:V1.0.3")
-    implementation ("com.github.OMARIHAMZA:StoryView:1.0.2-alpha")
-    implementation ("com.facebook.shimmer:shimmer:0.5.0")
-    implementation("com.google.firebase:firebase-auth")
+    implementation (libs.otpview)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.storage)
+    implementation(platform(libs.firebase.bom))
+    implementation (libs.glide)
+    implementation (libs.circleimageview)
+    implementation (libs.android.reactions)
+    implementation(libs.reactbutton)
+    implementation (libs.circularstatusview)
+    implementation (libs.storyview)
+    implementation (libs.shimmer)
+    implementation(libs.google.firebase.auth)
+    implementation(libs.okhttp)
+    implementation(libs.android.image.cropper)
+    implementation (libs.ucrop)
+    implementation (libs.recordview)
+    implementation (libs.java.jwt)
+    implementation (libs.audiowave.progressbar)
+    implementation(libs.amplituda)
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation ("com.github.chrisbanes:PhotoView:2.0.0"){
+        exclude (group="com.android.support")
+        exclude (group="androidx.versionedparcelable")
+    }
+
+    implementation("com.github.JagarYousef:ChatVoicePlayer:1.1.0") {
+        exclude(group = "com.android.support")
+        exclude(group = "androidx.versionedparcelable")
+    }
+
+    implementation (libs.google.auth.library.oauth2.http)
+    annotationProcessor(libs.room.compiler)
+
 //    implementation ("com.github.sharish:ShimmerRecyclerView:v1.3")
 }

@@ -1,8 +1,9 @@
 package com.saif.mywhatsapp.Models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class UserStatus {
+public class UserStatus implements Serializable {
     private String userId; // New field for user ID
     private String name;
     private String profileImage;

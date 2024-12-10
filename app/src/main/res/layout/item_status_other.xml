@@ -5,7 +5,9 @@
     android:id="@+id/other_status_layout"
     android:layout_width="match_parent"
     android:layout_marginTop="8dp"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    >
 
     <RelativeLayout
         android:id="@+id/others_image_layout"
@@ -39,23 +41,25 @@
 
     <TextView
         android:id="@+id/others_status_contact_name"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:text="Unknown"
         android:textColor="#000"
-        android:textStyle="bold"
+        android:layout_marginStart="12dp"
         android:textSize="18dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/others_image_layout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.054"
-        app:layout_constraintStart_toEndOf="@id/others_image_layout"
-        app:layout_constraintTop_toTopOf="@+id/others_image_layout" />
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/others_image_layout"
+        app:layout_constraintTop_toTopOf="@+id/others_image_layout"
+        app:layout_constraintVertical_bias="0.194" />
 
     <TextView
         android:id="@+id/others_status_time"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="09:56 pm 13 june 2024"
+        android:text="12:00 am"
         app:layout_constraintEnd_toEndOf="@id/others_status_contact_name"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/others_status_contact_name"

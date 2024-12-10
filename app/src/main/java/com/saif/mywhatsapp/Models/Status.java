@@ -1,18 +1,46 @@
 package com.saif.mywhatsapp.Models;
 
-public class Status {
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
+import java.io.Serializable;
 
+@Entity
+public class Status implements Serializable {
+
+    @PrimaryKey(autoGenerate = true)
+    private int id;
+    private String userId;  // Add this line
     private String imageUrl;
     private long timeStamps;
+    private boolean isLocal;
 
     public Status() {
     }
 
-    public Status(String imageUrl, long timeStamps) {
+    public Status(String userId, String imageUrl, long timeStamps) {
+        this.userId = userId;
         this.imageUrl = imageUrl;
         this.timeStamps = timeStamps;
+        this.isLocal = false;
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
     public long getTimeStamps() {
         return timeStamps;
     }
@@ -27,5 +55,13 @@ public class Status {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public boolean isLocal() {
+        return isLocal;
+    }
+
+    public void setLocal(boolean local) {
+        isLocal = local;
     }
 }

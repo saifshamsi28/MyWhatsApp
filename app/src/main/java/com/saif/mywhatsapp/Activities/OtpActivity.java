@@ -169,7 +169,4 @@ public class OtpActivity extends AppCompatActivity {
         },0,1000);
 
     }
-
-
-
 }

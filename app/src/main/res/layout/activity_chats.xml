@@ -11,9 +11,8 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
+        android:background="@color/GreenishBlue"
         android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -39,10 +38,12 @@
                 android:src="@drawable/avatar" />
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/name_status_linear_layout"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_marginStart="15dp"
-                android:gravity="center"
+                android:gravity="center_vertical"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <TextView
@@ -50,19 +51,46 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="saif"
+                    android:maxLines="1"
                     android:textColor="@color/white"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/status"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Online"
-                    android:textColor="@color/white"
-                    android:visibility="gone" />
+                    android:layout_gravity="start"
+                    android:textColor="@color/white" />
             </LinearLayout>
+            <ImageView
+                android:id="@+id/video_call"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="16dp"
+                android:background="?selectableItemBackground"
+                android:src="@drawable/video_call"
+                />
+            <ImageView
+                android:id="@+id/audio_call"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="16dp"
+                android:background="?selectableItemBackground"
+                android:src="@drawable/audio_call"
+                />
+            <ImageView
+                android:id="@+id/more_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="16dp"
+                android:background="?selectableItemBackground"
+                android:src="@drawable/vertical_more"
+                app:tint="@color/white" />
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
 
@@ -70,25 +98,28 @@
         android:id="@+id/chat_recyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="visible"
-        tools:listitem="@layout/item_receive"
         android:paddingBottom="5dp"
+        android:visibility="visible"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/cardView"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+        app:layout_constraintVertical_bias="0.0"
+        tools:listitem="@layout/item_receive" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="55dp"
         android:layout_marginBottom="5dp"
         app:cardCornerRadius="30dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/sendBtn"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:cardElevation="4dp">
 
@@ -105,7 +136,7 @@
                 android:layout_height="25dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
-                app:srcCompat="@drawable/ic_fb_love" />
+                app:srcCompat="@drawable/emojis" />
 
             <EditText
                 android:id="@+id/messageBox"
@@ -113,7 +144,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
-                android:hint="Type a message..."
+                android:hint="Message..."
                 android:inputType="textMultiLine"
                 android:lines="1"
                 android:maxLines="6"
@@ -146,12 +177,108 @@
         android:id="@+id/sendBtn"
         android:layout_width="45dp"
         android:layout_height="45dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="5dp"
         android:background="@drawable/circle_greenish_blue"
-        android:padding="10dp"
-        app:layout_constraintBottom_toBottomOf="@+id/cardView"
+        android:padding="12dp"
+        android:paddingStart="14dp"
+        app:layout_constraintBottom_toBottomOf="@+id/main"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/cardView"
+        android:layout_marginBottom="8dp"
         app:srcCompat="@drawable/icon_send"
         app:tint="@color/white" />
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/bottom_scroll_btn"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="575dp"
+        android:layout_marginEnd="14dp"
+        android:background="@drawable/circle_bg"
+        android:backgroundTint="#FFFFFF"
+        android:padding="5dp"
+        android:visibility="gone"
+        android:src="@drawable/scroll_to_bottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/recording_cardview"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="55dp"
+        android:layout_marginBottom="5dp"
+        app:cardCornerRadius="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <com.devlomi.record_view.RecordView
+            android:id="@+id/record_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentBottom="true"
+            app:counter_time_color="#ff0000"
+            app:layout_constraintBottom_toBottomOf="@+id/main"
+            app:layout_constraintEnd_toStartOf="@+id/record_button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:slide_to_cancel_arrow="@drawable/recv_ic_arrow"
+            app:slide_to_cancel_text="Slide To Cancel" />
+    </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+
+    <com.devlomi.record_view.RecordButton
+        android:id="@+id/record_button"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginEnd="5dp"
+        android:background="@drawable/circle_bg"
+        android:backgroundTint="@color/GreenishBlue"
+        android:scaleType="centerInside"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:mic_icon="@drawable/recv_ic_mic_white" />
+
+    <com.devlomi.record_view.RecordLockView
+        android:id="@+id/record_lock"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/circle_bg"
+        android:backgroundTint="@color/white"
+        android:layout_marginBottom="26dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintBottom_toTopOf="@id/record_button"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/glowing_mic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:src="@drawable/glowing_mic"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:translationZ="5dp"
+        android:layout_margin="16dp"/>
+
+    <ImageView
+        android:id="@+id/basket_img"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/basket_img"
+        android:translationZ="5dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_margin="16dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

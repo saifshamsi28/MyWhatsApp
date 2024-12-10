@@ -2,6 +2,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+
+
+    <permission
+        android:name="${applicationId}.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -13,9 +31,30 @@
         android:theme="@style/Theme.ChatsActionbar"
         tools:targetApi="31">
         <activity
-            android:name=".Activities.ProfileActivity"
-            android:parentActivityName=".Activities.ChatsActivity"
+            android:name=".Activities.CropImageActivity"
             android:exported="false" />
+        <activity
+            android:name=".Activities.SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".Activities.MyStatusViewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyWhatsApp" />
+        <activity
+            android:name=".Activities.ProfileActivity"
+            android:exported="false"
+            android:parentActivityName=".Activities.ChatsActivity"
+            android:theme="@style/Theme.MyWhatsApp" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".Activities.ChatsActivity" />
+        </activity>
         <activity
             android:name=".Activities.ChatsActivity"
             android:exported="false"
@@ -29,26 +68,32 @@
             android:name=".Activities.OtpActivity"
             android:exported="false"
             android:theme="@style/Base.Theme.MyWhatsApp"
-            android:windowSoftInputMode="stateVisible" />
+            android:windowSoftInputMode="stateVisible|adjustResize" />
         <activity
             android:name=".Activities.SignUpLoginActivity"
             android:exported="true"
             android:theme="@style/Base.Theme.MyWhatsApp"
-            android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".Activities.MainActivity"
             android:exported="true"
-            android:theme="@style/Base.Theme.MyWhatsApp" />
-
+            android:theme="@style/Base.Theme.MyWhatsApp"
+            android:windowSoftInputMode="adjustNothing" />
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
+
+        <service
+            android:name=".FCMNotificationService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="chat_notifications" />
     </application>
 
 </manifest>
