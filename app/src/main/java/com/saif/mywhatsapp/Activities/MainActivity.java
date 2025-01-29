@@ -130,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-
             BottomNavigationView finalBottomNavigationView = bottomNavigationView;
             viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
                 @Override

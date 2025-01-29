@@ -41,7 +41,7 @@ public class OtpActivity extends AppCompatActivity {
 
     PhoneAuthProvider.ForceResendingToken resendingToken;
     ProgressDialog progressDialog;
-    Long  timeOutSeconds=60L;
+    Long timeOutSeconds=60L;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,11 +49,11 @@ public class OtpActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         otpBinding = ActivityOtpBinding.inflate(getLayoutInflater());
         setContentView(otpBinding.getRoot());
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+//            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+//            return insets;
+//        });
         Window window = getWindow();
         window.setStatusBarColor(ContextCompat.getColor(this, R.color.GreenishBlue));
         auth=FirebaseAuth.getInstance();
@@ -74,7 +74,7 @@ public class OtpActivity extends AppCompatActivity {
                 if (verificationId != null) {
                     if (!otp.isEmpty()) {
                         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, otp);
-                        singIn(credential);
+                        signIn(credential);
                     } else {
                         Toast.makeText(OtpActivity.this, " OTP is null", Toast.LENGTH_SHORT).show();
                     }
@@ -94,6 +94,12 @@ public class OtpActivity extends AppCompatActivity {
 
     private void sendOtp(String phoneNumber, boolean isResend) {
         resendOtpTimer();
+        progressDialog.setMessage("Sending OTP...");
+        progressDialog.setCancelable(false);
+        progressDialog.show(); // Show progress only after ensuring OTP is being sent
+
+        Log.d("OtpActivity", "Sending OTP to " + phoneNumber);
+
         PhoneAuthOptions.Builder options = PhoneAuthOptions.newBuilder(auth)
                 .setPhoneNumber(phoneNumber)
                 .setTimeout(timeOutSeconds, TimeUnit.SECONDS)
@@ -101,49 +107,58 @@ public class OtpActivity extends AppCompatActivity {
                 .setCallbacks(new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                     @Override
                     public void onVerificationCompleted(@NonNull PhoneAuthCredential phoneAuthCredential) {
-                        singIn(phoneAuthCredential);
+                        signIn(phoneAuthCredential);
                         progressDialog.dismiss();
                     }
+
                     @Override
                     public void onVerificationFailed(@NonNull FirebaseException e) {
                         Toast.makeText(OtpActivity.this, "Verification failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        Log.e("Verification Failed", "Error: " + e.getMessage(), e);
                         progressDialog.dismiss();
                     }
+
                     @Override
                     public void onCodeSent(@NonNull String verifyId, @NonNull PhoneAuthProvider.ForceResendingToken forceResendingToken) {
                         super.onCodeSent(verifyId, forceResendingToken);
-                        verificationId=verifyId;
-                        resendingToken=forceResendingToken;
+                        verificationId = verifyId;
+                        resendingToken = forceResendingToken;
                         progressDialog.dismiss();
                         Toast.makeText(OtpActivity.this, "OTP sent successfully", Toast.LENGTH_SHORT).show();
-                        InputMethodManager inputMethodManager=(InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                        inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+
+                        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        if (inputMethodManager != null) {
+                            inputMethodManager.showSoftInput(otpBinding.otpView, InputMethodManager.SHOW_IMPLICIT);
+                        }
                         otpBinding.otpView.requestFocus();
                     }
                 });
-        if(isResend){
+
+        if (isResend && resendingToken != null) {
             PhoneAuthProvider.verifyPhoneNumber(options.setForceResendingToken(resendingToken).build());
-        }else {
+        } else {
             PhoneAuthProvider.verifyPhoneNumber(options.build());
         }
     }
-    private void singIn(PhoneAuthCredential phoneAuthCredential) {
+
+    private void signIn(PhoneAuthCredential phoneAuthCredential) {
         auth.signInWithCredential(phoneAuthCredential).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     Toast.makeText(OtpActivity.this, "Logged in", Toast.LENGTH_SHORT).show();
-                    Intent intent=new Intent(OtpActivity.this,SetUpProfileActivity.class);
-                    intent.putExtra("PhoneNumber",phoneNumber);
+                    Intent intent = new Intent(OtpActivity.this, SetUpProfileActivity.class);
+                    intent.putExtra("PhoneNumber", phoneNumber);
                     startActivity(intent);
                     finishAffinity();
                 } else {
                     Toast.makeText(OtpActivity.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.e("Login failed","login failed because "+task.getException().getMessage());
+                    Log.e("Login failed", "Error: " + task.getException().getMessage(), task.getException());
                 }
             }
         });
     }
+
     private void resendOtpTimer(){
         otpBinding.resendOtpBtn.setEnabled(false);
         otpBinding.resendTimer.setVisibility(View.VISIBLE);
