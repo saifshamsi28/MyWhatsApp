@@ -514,9 +514,6 @@ public class ChatsActivity extends AppCompatActivity {
         }
     }
 
-
-
-
     private void sendMessage(String messageText) {
         Date date = new Date();
         String randomKey = database.getReference().push().getKey();

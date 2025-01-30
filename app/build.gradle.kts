@@ -23,6 +23,16 @@ android {
     }
 
 
+//    buildscript {
+//        repositories {
+//            google()
+//            mavenCentral()
+//        }
+//        dependencies {
+//            classpath("com.google.gms:google-services:4.4.2") // Update version if needed
+//        }
+//    }
+
     defaultConfig {
         applicationId = "com.saif.mywhatsapp"
         minSdk = 23
@@ -89,10 +99,10 @@ dependencies {
         exclude (group="androidx.versionedparcelable")
     }
 
-    implementation("com.github.JagarYousef:ChatVoicePlayer:1.1.0") {
-        exclude(group = "com.android.support")
-        exclude(group = "androidx.versionedparcelable")
-    }
+//    implementation("com.github.JagarYousef:ChatVoicePlayer:1.1.0") {
+//        exclude(group = "com.android.support")
+//        exclude(group = "androidx.versionedparcelable")
+//    }
 
     implementation (libs.google.auth.library.oauth2.http)
     annotationProcessor(libs.room.compiler)

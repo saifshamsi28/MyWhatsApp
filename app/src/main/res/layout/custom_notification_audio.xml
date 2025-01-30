@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ImageView
+        android:id="@+id/profile_image"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/avatar"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/circle_bg"/>
+
+    <TextView
+        android:id="@+id/sender_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/profile_image"
+        android:text="Sender Name"
+        android:textSize="16dp"
+        android:textStyle="bold"/>
+
+    <ImageView
+        android:id="@+id/icon_mic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/profile_image"
+        android:layout_below="@id/sender_name"
+        android:src="@drawable/mic"
+        android:text="Message text"
+        app:tint="@color/GreenishBlue"
+        android:textSize="12dp"/>
+
+    <TextView
+        android:id="@+id/voice_message_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/icon_mic"
+        android:layout_alignBottom="@id/icon_mic"
+        android:text="Voice message(0:02)" />
+</RelativeLayout>

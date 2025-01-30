@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+<!--    <item-->
+<!--        android:id="@+id/video_call"-->
+<!--        android:title="View contact"-->
+<!--        android:icon="@drawable/video_call"-->
+<!--        app:showAsAction="always"/>-->
+<!--    <item-->
+<!--        android:id="@+id/audio_call"-->
+<!--        android:title="View contact"-->
+<!--        android:icon="@drawable/audio_call"-->
+<!--        app:showAsAction="always"/>-->
+    <item
+        android:id="@+id/view_contact"
+        android:title="View contact"
+        android:icon="@drawable/avatar"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/wallpaper"
+        android:title="Wallpaper"
+        android:icon="@drawable/avatar"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/search"
+        android:title="Search"
+        android:icon="@drawable/avatar"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/clear_chat"
+        android:title="Clear chat"
+        app:showAsAction="never">
+    </item>
+    <item
+        android:id="@+id/block"
+        android:title="Block"
+        app:showAsAction="never">
+    </item>
+</menu>
