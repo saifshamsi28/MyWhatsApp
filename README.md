@@ -26,15 +26,15 @@ and after seeting profile user will go to homescreen....
   <tr>
     <td align="center">
       <b style="font-size: 28px;">Profile activity</b><br><br>
-      <img src="https://github.com/user-attachments/assets/82d22c04-0b24-4031-b619-f9eb8c0ae8e8" width="100" height="200"/>
+      <img src="https://github.com/user-attachments/assets/82d22c04-0b24-4031-b619-f9eb8c0ae8e8" width="150" height="300"/>
     </td>
     <td align="center">
       <b style="font-size: 18px;">Home Screen</b><br><br>
-      <img src="https://github.com/user-attachments/assets/ba0b0a1e-2dc1-4425-882b-b2a9b2d80081" width="100" height="200"/>
+      <img src="https://github.com/user-attachments/assets/ba0b0a1e-2dc1-4425-882b-b2a9b2d80081" width="150" height="300"/>
     </td>
     <td align="center">
       <b style="font-size: 18px;">Chat Screen</b><br><br>
-      <img src="https://github.com/user-attachments/assets/b9203a4b-5e6d-4387-98a0-3bca060fd334" width="100" height="200"/>
+      <img src="https://github.com/user-attachments/assets/b9203a4b-5e6d-4387-98a0-3bca060fd334" width="150" height="300"/>
     </td>
   </tr>
 </table>
