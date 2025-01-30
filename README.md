@@ -2,7 +2,7 @@
 
 This is a simple social media app built using JAVA,Xml,Firebase, Room Database. Below are some snapshots of the app in action:
 
-
+<div align="center">
 <table>
   <tr>
     <td align="flex center">
@@ -19,9 +19,10 @@ This is a simple social media app built using JAVA,Xml,Firebase, Room Database. 
     </td>
   </tr>
 </table>
-
+</div>
 After successful otp verication user redirects to profile activity where user can set name, profile photo and about.
 and after seeting profile user will go to homescreen....
+<div align="center">
 <table>
   <tr>
     <td align="center">
@@ -38,5 +39,5 @@ and after seeting profile user will go to homescreen....
     </td>
   </tr>
 </table>
-
+</div>
 
