@@ -49,11 +49,6 @@ public class OtpActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         otpBinding = ActivityOtpBinding.inflate(getLayoutInflater());
         setContentView(otpBinding.getRoot());
-//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-//            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-//            return insets;
-//        });
         Window window = getWindow();
         window.setStatusBarColor(ContextCompat.getColor(this, R.color.GreenishBlue));
         auth=FirebaseAuth.getInstance();
