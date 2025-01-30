@@ -48,5 +48,34 @@ This is a simple social media app built using JAVA, XML, Firebase, and Room Data
       <img src="https://github.com/user-attachments/assets/b9203a4b-5e6d-4387-98a0-3bca060fd334" width="150" height="300"/>
     </td>
   </tr>
+
+  <!-- Padding Row -->
+  <tr><td colspan="3" height="30px"></td></tr>
+
+  <!-- Text Before Third Row -->
+  <tr>
+    <td colspan="3" align="center">
+      <b style="font-size: 20px;">Users can also update their status, view their own status list, and check others' status updates.</b>
+    </td>
+  </tr>
+
+  <!-- Padding Row -->
+  <tr><td colspan="3" height="30px"></td></tr>
+
+  <!-- Third Row of Images -->
+  <tr>
+    <td align="center">
+      <b style="font-size: 18px;">Status Screen</b><br><br>
+      <img src="https://github.com/user-attachments/assets/b40d7409-8163-4875-9c81-c89d05bb6072" width="150" height="300"/>
+    </td>
+    <td align="center">
+      <b style="font-size: 18px;">List of My Status</b><br><br>
+      <img src="https://github.com/user-attachments/assets/b1bbb88d-77be-438e-ad2b-24782eb6f620" width="150" height="300"/>
+    </td>
+    <td align="center">
+      <b style="font-size: 18px;">Viewing Status</b><br><br>
+      <img src="https://github.com/user-attachments/assets/782b4ea2-e267-458d-a084-80eddd28f029" width="150" height="300"/>
+    </td>
+  </tr>
 </table>
 </div>
