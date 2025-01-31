@@ -106,6 +106,9 @@ dependencies {
 
     implementation (libs.google.auth.library.oauth2.http)
     annotationProcessor(libs.room.compiler)
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+
 
 //    implementation ("com.github.sharish:ShimmerRecyclerView:v1.3")
 }
