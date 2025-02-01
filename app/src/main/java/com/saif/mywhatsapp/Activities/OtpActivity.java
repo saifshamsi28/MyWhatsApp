@@ -375,10 +375,10 @@ public class OtpActivity extends AppCompatActivity {
     }
 
     private void sendOtp(String phoneNumber, boolean isResend) {
-        if (isResend) {
-            otpBinding.resendOtpBtn.setEnabled(false);
+//        if (isResend) {
+//            otpBinding.resendOtpBtn.setEnabled(false);
             startResendOtpTimer();
-        }
+//        }
 
         progressDialog.setMessage("Sending OTP...");
         progressDialog.show();
@@ -398,13 +398,13 @@ public class OtpActivity extends AppCompatActivity {
                         Log.d("OTP Sent", "OTP Response: " + response.body().getOtp_sent());
                     }
                 } else {
-                    try {
-                        String errorBody = response.errorBody().string();
-                        Log.e("OTP Error", "Error: " + response.message());
-                        Log.e("OTP Error", "Response Body: " + errorBody);
-                    } catch (IOException e) {
-                        Log.e("OTP Error", "Error reading the response body: " + e.getMessage());
-                    }
+//                    try {
+//                        String errorBody = response.errorBody().string();
+//                        Log.e("OTP Error", "Error: " + response.message());
+//                        Log.e("OTP Error", "Response Body: " + errorBody);
+//                    } catch (IOException e) {
+//                        Log.e("OTP Error", "Error reading the response body: " + e.getMessage());
+//                    }
                     Toast.makeText(OtpActivity.this, "Error Sending OTP", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -421,22 +421,38 @@ public class OtpActivity extends AppCompatActivity {
         progressDialog.setMessage("Verifying OTP...");
         progressDialog.show();
 
+        // Create the request with phone number and OTP code
         VerifyOtpRequest request = new VerifyOtpRequest(phoneNumber, otpCode);
+
+        // Get the instance of Supabase Auth API
         SupabaseAuthApi api = supabaseClient.getAuthApi();
 
+        // Call the API and handle the response
         api.verifyOtp(request).enqueue(new Callback<VerifyOtpResponse>() {
             @Override
             public void onResponse(Call<VerifyOtpResponse> call, Response<VerifyOtpResponse> response) {
                 progressDialog.dismiss();
-                if (response.isSuccessful()) {
-                    Toast.makeText(OtpActivity.this, "OTP Verified", Toast.LENGTH_SHORT).show();
-                    Log.d("OTP Verified", "OTP verified successfully");
 
-                    Intent intent = new Intent(OtpActivity.this, SetUpProfileActivity.class);
-                    intent.putExtra("Phone_number", phoneNumber);
-                    startActivity(intent);
-                    finishAffinity();
+                // Check if the response was successful
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        // Log the successful OTP verification response
+                        Log.d("OTP Verified", "OTP verified successfully");
+
+                        // Check for the correct access token (not anon key)
+                        Log.i("OtpActivity", "Access token: " + response.body().getAccessToken());
+
+                        // Proceed with the next activity
+                        Intent intent = new Intent(OtpActivity.this, SetUpProfileActivity.class);
+                        intent.putExtra("Phone_number", phoneNumber);
+                        intent.putExtra("access_token", response.body().getAccessToken());
+                        startActivity(intent);
+                        finishAffinity();
+                    } else {
+                        Log.e("OtpActivity", "Response body is null");
+                    }
                 } else {
+                    // Handle invalid OTP or other errors
                     Toast.makeText(OtpActivity.this, "Invalid OTP", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -448,6 +464,7 @@ public class OtpActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private void startResendOtpTimer() {
         otpBinding.resendOtpBtn.setEnabled(false);

@@ -108,6 +108,10 @@ dependencies {
     annotationProcessor(libs.room.compiler)
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
+//    implementation("io.github.jan-tennert.supabase:bom:3.0.3")
+//    implementation("io.github.jan-tennert.supabase:postgrest-kt:3.0.3")
+//    implementation("io.ktor:ktor-client-android:3.0.3")
+//    implementation(libs.supabase.kt)
 
 
 //    implementation ("com.github.sharish:ShimmerRecyclerView:v1.3")

@@ -34,7 +34,9 @@ firebaseMessaging = "24.1.0"
 cardview = "1.0.0"
 shimmer = "0.5.0"
 storyview = "1.0.2-alpha"
+supabaseKt = "jar"
 ucrop = "2.2.8"
+retrofit = "2.11.0"
 
 [libraries]
 amplituda = { module = "com.github.lincollincol:amplituda", version.ref = "amplituda" }
@@ -72,7 +74,10 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 shimmer = { module = "com.facebook.shimmer:shimmer", version.ref = "shimmer" }
 storyview = { module = "com.github.OMARIHAMZA:StoryView", version.ref = "storyview" }
+supabase-kt = { module = "io.github.jan-tennert.supabase:supabase-kt", version.ref = "supabaseKt" }
 ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucrop" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
