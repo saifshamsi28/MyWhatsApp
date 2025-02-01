@@ -22,6 +22,7 @@ public class MyApp extends Application {
                 PlayIntegrityAppCheckProviderFactory.getInstance()
         );
 
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     "whatsapp_notification_channel",
