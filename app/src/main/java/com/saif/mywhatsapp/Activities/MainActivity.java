@@ -7,8 +7,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,30 +21,23 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.saif.mywhatsapp.Adapters.UserAdapter;
 import com.saif.mywhatsapp.Adapters.ViewPagerAdapter;
 import com.saif.mywhatsapp.Database.AppDatabase;
 import com.saif.mywhatsapp.Database.DatabaseClient;
 import com.saif.mywhatsapp.Fragments.ChatsFragment;
-import com.saif.mywhatsapp.Models.User;
 import com.saif.mywhatsapp.R;
 import com.saif.mywhatsapp.UserStatusObserver;
 import com.saif.mywhatsapp.databinding.ActivityMainBinding;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -54,17 +45,10 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class MainActivity extends AppCompatActivity {
 
     ActivityMainBinding mainBinding;
-    FirebaseAuth auth;
     FirebaseDatabase database;
     public static String currentUserName, currentUserProfile, aboutCurrentUser;
     ViewPager2 viewPager;
     AppDatabase appDatabase;
-    User currentUser;
-    ArrayList<User> users;
-    UserAdapter userAdapter;
-    RecyclerView recyclerView;
-    private final Executor executor = Executors.newSingleThreadExecutor();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.black));
 
 
-            auth = FirebaseAuth.getInstance();
+//            auth = FirebaseAuth.getInstance();
             database = FirebaseDatabase.getInstance();
             appDatabase = DatabaseClient.getInstance(this).getAppDatabase();
 
@@ -99,18 +83,18 @@ public class MainActivity extends AppCompatActivity {
             UserStatusObserver appLifecycleObserver = new UserStatusObserver(this);
             ProcessLifecycleOwner.get().getLifecycle().addObserver(appLifecycleObserver);
 
-            executor.execute(() -> {
-                if (appDatabase != null) {
-                    currentUser = appDatabase.userDao().getUserByUid(auth.getUid());
-                    if (currentUser != null) {
-                        mainHandler.post(() -> {
-                            currentUserName = currentUser.getName();
-                            currentUserProfile = currentUser.getProfileImage();
-                            aboutCurrentUser = currentUser.getAbout();
-                        });
-                    }
-                }
-            });
+//            executor.execute(() -> {
+//                if (appDatabase != null) {
+//                    currentUser = appDatabase.userDao().getUserByUid(auth.getUid());
+//                    if (currentUser != null) {
+//                        mainHandler.post(() -> {
+//                            currentUserName = currentUser.getName();
+//                            currentUserProfile = currentUser.getProfileImage();
+//                            aboutCurrentUser = currentUser.getAbout();
+//                        });
+//                    }
+//                }
+//            });
 
 
             bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
@@ -148,13 +132,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() != null) {
-            setFCMTokenOfUser();
-        } else {
-            // Handle user not authenticated
-            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
-        }
+//        FirebaseAuth auth = FirebaseAuth.getInstance();
+//        if (auth.getCurrentUser() != null) {
+//            setFCMTokenOfUser();
+//        } else {
+//            // Handle user not authenticated
+//            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+//        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
@@ -179,9 +163,9 @@ public class MainActivity extends AppCompatActivity {
                 if (token != null && !token.isEmpty()) {
                     HashMap<String, Object> tokenMap = new HashMap<>();
                     tokenMap.put("fcmToken", token);
-                    FirebaseDatabase.getInstance().getReference().child("Users")
-                            .child(FirebaseAuth.getInstance().getUid())
-                            .updateChildren(tokenMap);
+//                    FirebaseDatabase.getInstance().getReference().child("Users")
+//                            .child(FirebaseAuth.getInstance().getUid())
+//                            .updateChildren(tokenMap);
                 } else {
                     Toast.makeText(MainActivity.this, "Failed to get FCM token", Toast.LENGTH_SHORT).show();
                 }
@@ -275,15 +259,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void deleteFCMTokenAndSignOut() {
-        FirebaseMessaging.getInstance().deleteToken().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                auth.signOut();
+//        FirebaseMessaging.getInstance().deleteToken().addOnCompleteListener(task -> {
+//            if (task.isSuccessful()) {
+//                auth.signOut();
                 Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(MainActivity.this, SignUpLoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-            }
-        });
+//                Intent intent = new Intent(MainActivity.this, SignUpLoginActivity.class);
+//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//                startActivity(intent);
+//            }
+//        });
     }
 
     private int setThemeForHomeScreen() {
