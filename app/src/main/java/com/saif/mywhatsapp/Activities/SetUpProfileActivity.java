@@ -1,7 +1,5 @@
 package com.saif.mywhatsapp.Activities;
 
-import static com.saif.mywhatsapp.SupabaseClient.API_KEY;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -30,7 +28,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.gson.Gson;
 import com.saif.mywhatsapp.Database.AppDatabase;
 import com.saif.mywhatsapp.Database.DatabaseClient;
 import com.saif.mywhatsapp.Models.User;
@@ -42,7 +39,6 @@ import com.saif.mywhatsapp.databinding.ActivitySetUpProfileBinding;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -55,7 +51,6 @@ import retrofit2.Response;
 public class SetUpProfileActivity extends AppCompatActivity {
 
     private ActivitySetUpProfileBinding setUpProfileBinding;
-    private FirebaseAuth auth;
     private FirebaseDatabase database;
     private FirebaseStorage storage;
     private Uri selectedImg;
@@ -64,10 +59,7 @@ public class SetUpProfileActivity extends AppCompatActivity {
     private AppDatabase appDatabase;
     private User currentUser;
     private final Uri defaultUri = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mywhatsapp-2d301.appspot.com/o/avatar.png?alt=media&token=d1196659-20bc-4d9f-af24-ad2f74795faf");
-    private final String defaultName = "Unknown User";
     private final String defaultAbout = "Hey there i m using MyWhatsApp";
-    private final Executor executor = Executors.newSingleThreadExecutor();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private MyWhatsAppPermissions myWhatsAppPermissions;
     private SupabaseClient supabaseClient;
     private String supabaseUid;
@@ -119,12 +111,13 @@ public class SetUpProfileActivity extends AppCompatActivity {
             getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.GreenishBlue));
         }
         setTitle("Profile");
+        currentUser=new User();
         if(getSupportActionBar()!=null)
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
 
-        auth = FirebaseAuth.getInstance();
+//        auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
         appDatabase = DatabaseClient.getInstance(getApplicationContext()).getAppDatabase();
@@ -324,6 +317,7 @@ public class SetUpProfileActivity extends AppCompatActivity {
                 finish();
             } else {
                 Toast.makeText(SetUpProfileActivity.this, "Failed to update profile", Toast.LENGTH_SHORT).show();
+                Log.e("Firebase Error", "Failed to update profile", task.getException());
             }
         });
     }
